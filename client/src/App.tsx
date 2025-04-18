@@ -10,6 +10,7 @@ import TripsPage from "@/pages/trips-page";
 import TripCreatePage from "@/pages/trip-create-page";
 import TripDetailPage from "@/pages/trip-detail-page";
 import ExplorePage from "@/pages/explore-page";
+import ProfilePage from "@/pages/profile-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 
@@ -21,6 +22,7 @@ function Router() {
       <ProtectedRoute path="/trips" component={TripsPage} />
       <ProtectedRoute path="/trips/create" component={TripCreatePage} />
       <ProtectedRoute path="/trips/:id" component={TripDetailPage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/explore" component={ExplorePage} />
       <Route component={NotFound} />
     </Switch>
