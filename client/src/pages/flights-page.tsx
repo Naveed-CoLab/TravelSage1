@@ -15,7 +15,37 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { CalendarIcon, Search, Plane, Filter, ArrowRight, Clock, XCircle, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  CalendarIcon,
+  Search,
+  Plane,
+  Filter,
+  ArrowRight,
+  Clock,
+  XCircle,
+  Loader2,
+  CreditCard,
+  Heart,
+  Share2,
+  Calendar as CalendarIcon2,
+  MapPin,
+  User,
+  BarChart,
+  ChevronsUpDown,
+  CheckCircle,
+  Info,
+  Wallet,
+  Sparkles,
+  ShieldCheck,
+  Clock12,
+  ArrowUpRight
+} from "lucide-react";
 
 // Flight types
 type Airport = {
@@ -325,156 +355,249 @@ export default function FlightsPage() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Flight Search</h1>
+      <div>
+        {/* Hero Banner */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-indigo-700 h-80 overflow-hidden">
+          <div className="absolute inset-0 bg-blue-800 mix-blend-multiply opacity-30"></div>
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-30"
+            style={{ 
+              backgroundImage: "url('https://images.unsplash.com/photo-1536516677467-a8cf206e1066?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')" 
+            }}
+          ></div>
+          
+          <div className="absolute inset-0 flex items-center">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="max-w-3xl">
+                <h1 className="text-4xl font-bold text-white mb-2">Find Your Next Adventure</h1>
+                <p className="text-xl text-white/80 mb-8">Search flights to destinations worldwide with our easy-to-use flight finder</p>
+                
+                {/* Stats */}
+                <div className="flex flex-wrap gap-x-8 gap-y-2 text-white/90 text-sm">
+                  <div className="flex items-center">
+                    <Plane className="h-4 w-4 mr-2" />
+                    <span>100+ Airlines</span>
+                  </div>
+                  <div className="flex items-center">
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    <span>Secure Booking</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    <span>Best Price Guarantee</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         
-        {/* Search Form */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <Tabs defaultValue={tripType} onValueChange={setTripType} className="w-full">
-            <TabsList className="mb-6">
-              <TabsTrigger value="roundtrip">Round Trip</TabsTrigger>
-              <TabsTrigger value="oneway">One Way</TabsTrigger>
-              <TabsTrigger value="multicity">Multi-City</TabsTrigger>
-            </TabsList>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Origin */}
-              <div className="space-y-2">
-                <Label htmlFor="origin">From</Label>
-                <div className="relative">
-                  <Plane className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 rotate-45" />
-                  <Input
-                    id="origin"
-                    placeholder="City or Airport"
-                    className="pl-10"
-                    value={origin}
-                    onChange={(e) => setOrigin(e.target.value)}
-                  />
+        {/* Search Form Card */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-20 mb-6 relative z-10">
+          <Card className="shadow-xl border-0">
+            <CardContent className="p-6">
+              <Tabs defaultValue={tripType} onValueChange={setTripType} className="w-full">
+                <div className="flex justify-between items-center mb-6">
+                  <TabsList className="grid grid-cols-3 w-auto">
+                    <TabsTrigger value="roundtrip" className="px-6">Round Trip</TabsTrigger>
+                    <TabsTrigger value="oneway" className="px-6">One Way</TabsTrigger>
+                    <TabsTrigger value="multicity" className="px-6">Multi-City</TabsTrigger>
+                  </TabsList>
+                  
+                  <div className="flex items-center gap-2 text-sm">
+                    <Label htmlFor="flexible-dates" className="cursor-pointer">Flexible Dates</Label>
+                    <Switch id="flexible-dates" />
+                  </div>
                 </div>
-              </div>
-              
-              {/* Destination */}
-              <div className="space-y-2">
-                <Label htmlFor="destination">To</Label>
-                <div className="relative">
-                  <Plane className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 -rotate-45" />
-                  <Input
-                    id="destination"
-                    placeholder="City or Airport"
-                    className="pl-10"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              {/* Depart Date */}
-              <div className="space-y-2">
-                <Label htmlFor="depart-date">Depart</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {departDate ? formatDate(departDate) : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={departDate || undefined}
-                      onSelect={(date: Date | undefined) => setDepartDate(date || null)}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              {/* Return Date */}
-              {tripType === "roundtrip" && (
-                <div className="space-y-2">
-                  <Label htmlFor="return-date">Return</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {returnDate ? formatDate(returnDate) : "Select date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={returnDate || undefined}
-                        onSelect={(date: Date | undefined) => setReturnDate(date || null)}
-                        initialFocus
+                
+                <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
+                  {/* Origin */}
+                  <div className="lg:col-span-2 space-y-2">
+                    <Label htmlFor="origin" className="text-sm font-medium">From</Label>
+                    <div className="relative">
+                      <Plane className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500 h-4 w-4 rotate-45" />
+                      <Input
+                        id="origin"
+                        placeholder="City or Airport"
+                        className="pl-10 h-12"
+                        value={origin}
+                        onChange={(e) => setOrigin(e.target.value)}
+                        list="origin-options"
                       />
-                    </PopoverContent>
-                  </Popover>
+                      <datalist id="origin-options">
+                        {popularAirports.map(airport => (
+                          <option key={airport.code} value={airport.city}>
+                            {airport.code} - {airport.name}
+                          </option>
+                        ))}
+                      </datalist>
+                      
+                      {origin && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 rounded-full text-gray-400 hover:text-gray-600"
+                          onClick={() => setOrigin('')}
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Destination */}
+                  <div className="lg:col-span-2 space-y-2">
+                    <Label htmlFor="destination" className="text-sm font-medium">To</Label>
+                    <div className="relative">
+                      <Plane className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500 h-4 w-4 -rotate-45" />
+                      <Input
+                        id="destination"
+                        placeholder="City or Airport"
+                        className="pl-10 h-12"
+                        value={destination}
+                        onChange={(e) => setDestination(e.target.value)}
+                        list="destination-options"
+                      />
+                      <datalist id="destination-options">
+                        {popularAirports.map(airport => (
+                          <option key={airport.code} value={airport.city}>
+                            {airport.code} - {airport.name}
+                          </option>
+                        ))}
+                      </datalist>
+                      
+                      {destination && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 rounded-full text-gray-400 hover:text-gray-600"
+                          onClick={() => setDestination('')}
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Date Selection */}
+                  <div className="lg:col-span-2">
+                    <Label className="text-sm font-medium mb-2 block">
+                      {tripType === "roundtrip" ? "Departure - Return" : "Departure"}
+                    </Label>
+                    <div className="flex gap-2">
+                      {/* Depart Date */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={`justify-start text-left font-normal h-12 flex-1 ${!departDate ? 'text-gray-400' : ''}`}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {departDate ? formatDate(departDate) : "Depart"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={departDate || undefined}
+                            onSelect={(date: Date | undefined) => setDepartDate(date || null)}
+                            initialFocus
+                            className="rounded-md border"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      
+                      {/* Return Date - Only shown for round trip */}
+                      {tripType === "roundtrip" && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={`justify-start text-left font-normal h-12 flex-1 ${!returnDate ? 'text-gray-400' : ''}`}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {returnDate ? formatDate(returnDate) : "Return"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={returnDate || undefined}
+                              onSelect={(date: Date | undefined) => setReturnDate(date || null)}
+                              initialFocus
+                              className="rounded-md border"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-              {/* Passengers */}
-              <div className="space-y-2">
-                <Label htmlFor="passengers">Passengers</Label>
-                <Select value={passengers} onValueChange={setPassengers}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 Passenger</SelectItem>
-                    <SelectItem value="2">2 Passengers</SelectItem>
-                    <SelectItem value="3">3 Passengers</SelectItem>
-                    <SelectItem value="4">4 Passengers</SelectItem>
-                    <SelectItem value="5">5 Passengers</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {/* Cabin Class */}
-              <div className="space-y-2">
-                <Label htmlFor="cabin-class">Cabin Class</Label>
-                <Select value={cabinClass} onValueChange={setCabinClass}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Economy">Economy</SelectItem>
-                    <SelectItem value="Premium Economy">Premium Economy</SelectItem>
-                    <SelectItem value="Business">Business</SelectItem>
-                    <SelectItem value="First">First Class</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {/* Search Button */}
-              <div className="flex items-end">
-                <Button 
-                  onClick={handleSearch} 
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                  disabled={isSearching}
-                >
-                  {isSearching ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Searching...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="mr-2 h-4 w-4" />
-                      Search Flights
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </Tabs>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+                  {/* Passengers */}
+                  <div className="lg:col-span-3 space-y-2">
+                    <Label htmlFor="passengers" className="text-sm font-medium">Passengers</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Select value={passengers} onValueChange={setPassengers}>
+                        <SelectTrigger className="pl-10 h-12">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 Passenger</SelectItem>
+                          <SelectItem value="2">2 Passengers</SelectItem>
+                          <SelectItem value="3">3 Passengers</SelectItem>
+                          <SelectItem value="4">4 Passengers</SelectItem>
+                          <SelectItem value="5">5 Passengers</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  {/* Cabin Class */}
+                  <div className="lg:col-span-3 space-y-2">
+                    <Label htmlFor="cabin-class" className="text-sm font-medium">Cabin Class</Label>
+                    <div className="relative">
+                      <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Select value={cabinClass} onValueChange={setCabinClass}>
+                        <SelectTrigger className="pl-10 h-12">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Economy">Economy</SelectItem>
+                          <SelectItem value="Premium Economy">Premium Economy</SelectItem>
+                          <SelectItem value="Business">Business</SelectItem>
+                          <SelectItem value="First">First Class</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  {/* Search Button */}
+                  <div className="lg:col-span-6 flex items-end">
+                    <Button 
+                      onClick={handleSearch} 
+                      className="w-full h-12 bg-blue-600 hover:bg-blue-700"
+                      disabled={isSearching}
+                    >
+                      {isSearching ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Searching for the best flights...
+                        </>
+                      ) : (
+                        <>
+                          <Search className="mr-2 h-5 w-5" />
+                          Search Flights
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
         
         {/* Search Results */}
