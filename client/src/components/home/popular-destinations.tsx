@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRight } from "lucide-react";
 
 const unsplash = createApi({
-  accessKey: process.env.VITE_UNSPLASH_ACCESS_KEY || 'public-access-key'
+  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY || 'public-access-key'
 });
 
 async function getDestinationImage(destination: string, country: string) {
