@@ -1,10 +1,11 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { useState, useRef } from "react";
+import { useLocation } from "wouter";
 import { createApi } from "unsplash-js";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, Heart } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import romeImg from "@assets/image_1745004323842.png";
 
 // Import destination images from assets if available
@@ -59,28 +60,89 @@ async function getDestinationImage(destination: string, country: string, type?: 
 }
 
 export default function PopularDestinations() {
+  const [, navigate] = useLocation();
+  const [wishlist, setWishlist] = useState<Record<string, boolean>>({});
+  
+  // Refs for scrollable containers
+  const destinationsRef = useRef<HTMLDivElement>(null);
+  const hotelsRef = useRef<HTMLDivElement>(null);
+  const experiencesRef = useRef<HTMLDivElement>(null);
+  
+  // Function to toggle wishlist status
+  const toggleWishlist = (id: string) => {
+    setWishlist(prev => {
+      const newWishlist = { ...prev };
+      newWishlist[id] = !prev[id];
+      
+      if (newWishlist[id]) {
+        toast({
+          title: "Added to Wishlist",
+          description: "The item has been added to your wishlist.",
+        });
+      } else {
+        toast({
+          title: "Removed from Wishlist",
+          description: "The item has been removed from your wishlist.",
+        });
+      }
+      
+      return newWishlist;
+    });
+  };
+  
+  // Function to handle scroll with buttons
+  const handleScroll = (direction: 'left' | 'right', ref: React.RefObject<HTMLDivElement>) => {
+    if (ref.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+  
+  // Function to handle item click
+  const handleItemClick = (type: string, item: any) => {
+    switch (type) {
+      case 'destination':
+        navigate(`/trips/create?destination=${encodeURIComponent(item.name)}`);
+        break;
+      case 'hotel':
+        toast({
+          title: `Selected ${item.name}`,
+          description: `Viewing details for ${item.name} in ${item.location}`,
+        });
+        break;
+      case 'experience':
+        toast({
+          title: `Selected ${item.name}`,
+          description: `Booking information for this experience will open shortly.`,
+        });
+        break;
+      default:
+        break;
+    }
+  };
+
   // Use these predefined destinations to match the design
   const topDestinations = [
     {
-      id: 1,
+      id: "dest-1",
       name: "Rome",
       country: "Italy",
       imageUrl: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
     },
     {
-      id: 2,
+      id: "dest-2",
       name: "Paris",
       country: "France",
       imageUrl: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
     },
     {
-      id: 3,
+      id: "dest-3",
       name: "Las Vegas",
       country: "NV",
       imageUrl: "https://images.unsplash.com/photo-1605833556294-ea5c7a74f57d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
     },
     {
-      id: 4,
+      id: "dest-4",
       name: "Reykjavik",
       country: "Iceland",
       imageUrl: "https://images.unsplash.com/photo-1504233529578-6d46baba6d34?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
@@ -90,7 +152,7 @@ export default function PopularDestinations() {
   // Hotel experience cards based on design
   const hotelExperiences = [
     {
-      id: 1,
+      id: "hotel-1",
       name: "Havana Vieja",
       location: "Miami Beach",
       rating: 4.5,
@@ -100,7 +162,7 @@ export default function PopularDestinations() {
       imageUrl: "https://images.unsplash.com/photo-1590073242678-70ee3fc28f8a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
     },
     {
-      id: 2,
+      id: "hotel-2",
       name: "Esquina Cubana",
       location: "Miami Beach",
       rating: 4.5,
@@ -110,7 +172,7 @@ export default function PopularDestinations() {
       imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
     },
     {
-      id: 3,
+      id: "hotel-3",
       name: "On Ocean 7 Cafe",
       location: "Miami Beach",
       rating: 4.5,
@@ -120,7 +182,7 @@ export default function PopularDestinations() {
       imageUrl: "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
     },
     {
-      id: 4,
+      id: "hotel-4",
       name: "Mama's Tacos • Latin Restaurant",
       location: "Miami Beach",
       rating: 4.5,
@@ -134,7 +196,7 @@ export default function PopularDestinations() {
   // Travel experiences based on design
   const travelExperiences = [
     {
-      id: 1,
+      id: "exp-1",
       name: "The Unvanquished Tour in Porto City Center",
       rating: 5.0,
       reviewCount: 18177,
@@ -143,7 +205,7 @@ export default function PopularDestinations() {
       imageUrl: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
     },
     {
-      id: 2,
+      id: "exp-2",
       name: "All-inclusive Ubud Private Tour",
       rating: 5.0,
       reviewCount: 12146,
@@ -152,7 +214,7 @@ export default function PopularDestinations() {
       imageUrl: "https://images.unsplash.com/photo-1604999333679-b86d54738315?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
     },
     {
-      id: 3,
+      id: "exp-3",
       name: "All Inclusive 90 minutes Canal Cruise by Captain Jack!",
       rating: 4.5,
       reviewCount: 12057,
@@ -162,7 +224,7 @@ export default function PopularDestinations() {
       imageUrl: "https://images.unsplash.com/photo-1528728329032-2972f65dfb3f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
     },
     {
-      id: 4,
+      id: "exp-4",
       name: "Small-Group Explore Angkor Wat Sunrise Tour with Guide from Siem Reap",
       rating: 5.0,
       reviewCount: 9364,
@@ -180,16 +242,20 @@ export default function PopularDestinations() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Top destinations for your next vacation</h2>
           
           <div className="relative">
-            <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide">
+            <div 
+              ref={destinationsRef}
+              className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide"
+            >
               {topDestinations.map((destination) => (
                 <div 
                   key={destination.id} 
                   className="relative min-w-[260px] rounded-xl overflow-hidden shadow-sm flex-shrink-0 snap-start group cursor-pointer"
+                  onClick={() => handleItemClick('destination', destination)}
                 >
                   <img 
                     src={destination.imageUrl}
                     alt={`${destination.name}, ${destination.country}`}
-                    className="w-full h-44 object-cover"
+                    className="w-full h-44 object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {
                       e.currentTarget.src = `https://source.unsplash.com/featured/?${encodeURIComponent(destination.name + ' ' + destination.country)}`;
                     }}
@@ -198,14 +264,31 @@ export default function PopularDestinations() {
                   <div className="absolute bottom-0 left-0 p-4 text-white">
                     <h3 className="text-xl font-bold">{destination.name}, {destination.country}</h3>
                   </div>
+                  <button 
+                    className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white shadow transition-colors duration-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleWishlist(destination.id);
+                    }}
+                  >
+                    <Heart 
+                      className={`h-4 w-4 ${wishlist[destination.id] ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+                    />
+                  </button>
                 </div>
               ))}
             </div>
             
-            <button className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+            <button 
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              onClick={() => handleScroll('left', destinationsRef)}
+            >
               <ChevronLeft className="h-6 w-6 text-gray-600" />
             </button>
-            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+            <button 
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              onClick={() => handleScroll('right', destinationsRef)}
+            >
               <ChevronRight className="h-6 w-6 text-gray-600" />
             </button>
           </div>
@@ -223,11 +306,15 @@ export default function PopularDestinations() {
           </div>
           
           <div className="relative">
-            <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide">
+            <div 
+              ref={hotelsRef}
+              className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide"
+            >
               {hotelExperiences.map((hotel) => (
                 <div 
                   key={hotel.id} 
-                  className="relative min-w-[300px] rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0 snap-start cursor-pointer"
+                  className="relative min-w-[300px] rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0 snap-start cursor-pointer transition-transform duration-300 hover:translate-y-[-4px] hover:shadow-md"
+                  onClick={() => handleItemClick('hotel', hotel)}
                 >
                   <div className="relative h-44">
                     <img 
@@ -238,10 +325,16 @@ export default function PopularDestinations() {
                         e.currentTarget.src = `https://source.unsplash.com/featured/?restaurant,food`;
                       }}
                     />
-                    <button className="absolute top-2 right-2 rounded-full bg-white p-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
+                    <button 
+                      className="absolute top-2 right-2 p-2 rounded-full bg-white shadow-sm transition-colors duration-200 hover:bg-gray-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleWishlist(hotel.id);
+                      }}
+                    >
+                      <Heart 
+                        className={`h-5 w-5 ${wishlist[hotel.id] ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
+                      />
                     </button>
                     <div className="absolute bottom-2 left-2 bg-green-600 text-white text-xs font-bold rounded px-1.5 py-1">
                       TripAdvisor
@@ -268,10 +361,16 @@ export default function PopularDestinations() {
               ))}
             </div>
             
-            <button className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+            <button 
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              onClick={() => handleScroll('left', hotelsRef)}
+            >
               <ChevronLeft className="h-6 w-6 text-gray-600" />
             </button>
-            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+            <button 
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              onClick={() => handleScroll('right', hotelsRef)}
+            >
               <ChevronRight className="h-6 w-6 text-gray-600" />
             </button>
           </div>
@@ -284,11 +383,15 @@ export default function PopularDestinations() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Top experiences on Tripadvisor</h2>
           
           <div className="relative">
-            <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide">
+            <div 
+              ref={experiencesRef}
+              className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide"
+            >
               {travelExperiences.map((exp) => (
                 <div 
                   key={exp.id} 
-                  className="relative min-w-[300px] rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0 snap-start cursor-pointer"
+                  className="relative min-w-[300px] rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0 snap-start cursor-pointer transition-transform duration-300 hover:translate-y-[-4px] hover:shadow-md"
+                  onClick={() => handleItemClick('experience', exp)}
                 >
                   <div className="relative h-44">
                     <img 
@@ -299,10 +402,16 @@ export default function PopularDestinations() {
                         e.currentTarget.src = `https://source.unsplash.com/featured/?travel,tour`;
                       }}
                     />
-                    <button className="absolute top-2 right-2 rounded-full bg-white p-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
+                    <button 
+                      className="absolute top-2 right-2 p-2 rounded-full bg-white shadow-sm transition-colors duration-200 hover:bg-gray-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleWishlist(exp.id);
+                      }}
+                    >
+                      <Heart 
+                        className={`h-5 w-5 ${wishlist[exp.id] ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
+                      />
                     </button>
                     <div className="absolute bottom-2 left-2 bg-amber-500 text-black text-xs font-bold rounded-sm px-2 py-1">
                       {exp.year}
@@ -332,10 +441,16 @@ export default function PopularDestinations() {
               ))}
             </div>
             
-            <button className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+            <button 
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              onClick={() => handleScroll('left', experiencesRef)}
+            >
               <ChevronLeft className="h-6 w-6 text-gray-600" />
             </button>
-            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+            <button 
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              onClick={() => handleScroll('right', experiencesRef)}
+            >
               <ChevronRight className="h-6 w-6 text-gray-600" />
             </button>
           </div>
@@ -359,7 +474,16 @@ export default function PopularDestinations() {
               <p className="text-gray-700 text-sm mb-4">
                 Among our top 1% of places, stays, eats, and experiences—decided by you.
               </p>
-              <Button variant="outline" className="rounded-full bg-black text-white border-black hover:bg-gray-800 px-4">
+              <Button 
+                variant="outline" 
+                className="rounded-full bg-black text-white border-black hover:bg-gray-800 px-4"
+                onClick={() => {
+                  toast({
+                    title: "Travelers' Choice Awards",
+                    description: "Viewing the best destinations and experiences of the year.",
+                  });
+                }}
+              >
                 See the winners
               </Button>
             </div>
