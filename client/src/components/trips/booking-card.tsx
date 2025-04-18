@@ -359,30 +359,49 @@ export default function BookingCard({ booking }: BookingCardProps) {
         {/* Booking options for hotels */}
         {showBookingOptions && isHotelBooking && (
           <div className="mt-4 border-t pt-3">
-            <p className="text-sm text-gray-600 mb-2">Book this accommodation with:</p>
-            <div className="grid grid-cols-2 gap-2">
-              {hotelBookingProviders.map((provider) => (
-                <Button 
-                  key={provider.name}
-                  variant="outline" 
-                  size="sm"
-                  className="justify-start"
-                  onClick={() => redirectToBookingProvider(provider)}
-                >
-                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                  {provider.name}
-                </Button>
-              ))}
+            <p className="text-sm font-medium text-gray-700 mb-3">Book this accommodation with:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {hotelBookingProviders.map((provider) => {
+                // Assign different colors to different providers
+                const getProviderColors = (name: string) => {
+                  switch (name) {
+                    case "Booking.com":
+                      return "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100";
+                    case "Hotels.com":
+                      return "bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100";
+                    case "Expedia":
+                      return "bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100";
+                    case "Airbnb":
+                      return "bg-red-50 border-red-200 text-red-600 hover:bg-red-100";
+                    default:
+                      return "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100";
+                  }
+                };
+                
+                return (
+                  <Button 
+                    key={provider.name}
+                    variant="outline" 
+                    size="sm"
+                    className={`justify-start py-3 border ${getProviderColors(provider.name)}`}
+                    onClick={() => redirectToBookingProvider(provider)}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                    <span className="truncate">{provider.name}</span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
         )}
       </CardContent>
       
-      <CardFooter className="bg-white p-3 border-t flex justify-end">
+      <CardFooter className="bg-gray-50 p-3 border-t flex justify-end">
         {!showBookingOptions ? (
           <Button 
-            variant="outline" 
+            variant={isHotelBooking ? "default" : "outline"}
             size="sm"
+            className={isHotelBooking ? "bg-green-600 hover:bg-green-700 text-white shadow-sm" : ""}
             onClick={handleBookingAction}
           >
             {isHotelBooking ? (
@@ -398,16 +417,30 @@ export default function BookingCard({ booking }: BookingCardProps) {
             )}
           </Button>
         ) : (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              setShowBookingOptions(false);
-              setShowMap(false);
-            }}
-          >
-            Hide Options
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="text-gray-600"
+              onClick={() => {
+                setShowBookingOptions(false);
+                setShowMap(false);
+              }}
+            >
+              Hide Options
+            </Button>
+            {isHotelBooking && (
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => openInMaps()}
+              >
+                <MapPin className="h-3.5 w-3.5 mr-1.5" />
+                View Map
+              </Button>
+            )}
+          </div>
         )}
       </CardFooter>
     </Card>

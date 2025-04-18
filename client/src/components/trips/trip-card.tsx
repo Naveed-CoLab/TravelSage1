@@ -144,25 +144,38 @@ export default function TripCard({ trip }: TripCardProps) {
           </CardFooter>
         </Link>
         
-        {/* Menu button positioned absolutely in the top-right */}
+        {/* Menu button positioned absolutely in the top-right with improved visibility */}
         <div 
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10"
           onClick={handleActionClick}
         >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 bg-white/80 hover:bg-white rounded-full">
+              <Button variant="ghost" size="icon" className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm rounded-full">
                 <MoreVertical className="h-4 w-4 text-gray-700" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate(`/trips/${trip.id}/edit`)}>
+            <DropdownMenuContent align="end" sideOffset={5} className="w-48 p-1 border border-gray-200 shadow-lg rounded-lg">
+              <DropdownMenuItem 
+                onClick={() => navigate(`/trips/${trip.id}/edit`)}
+                className="flex items-center py-2 px-3 cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
                 Edit Trip
               </DropdownMenuItem>
               <DropdownMenuItem 
-                className="text-red-600 focus:text-red-600" 
+                className="flex items-center py-2 px-3 text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer" 
                 onClick={() => setShowDeleteDialog(true)}
               >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
                 Delete Trip
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -172,20 +185,38 @@ export default function TripCard({ trip }: TripCardProps) {
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="border-0 shadow-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to delete this trip?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete your "{trip.title}" trip to {trip.destination} and all associated itineraries and bookings. This action cannot be undone.
+            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-red-50">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <AlertDialogTitle className="text-center text-xl">Delete Trip</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Are you sure you want to delete your "<span className="font-medium text-gray-900">{trip.title}</span>" trip to {trip.destination}?
+              <p className="mt-2 text-sm text-gray-500">
+                This will permanently remove all itineraries, activities, and bookings associated with this trip. This action cannot be undone.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-center sm:space-x-2 border-t pt-4">
+            <AlertDialogCancel className="mt-3 sm:mt-0 w-full sm:w-auto border-gray-300">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteTrip}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600 w-full sm:w-auto"
             >
-              {deleteTripMutation.isPending ? "Deleting..." : "Delete Trip"}
+              {deleteTripMutation.isPending ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Deleting...
+                </>
+              ) : "Delete Trip"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
