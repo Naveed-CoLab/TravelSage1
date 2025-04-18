@@ -257,12 +257,17 @@ export default function ItineraryDay({ day, destination, onAddActivity, onDelete
 
   // Filter data based on search and destination
   const filterData = (data: any[]) => {
+    const searchTerms = searchQuery.toLowerCase().split(',').map(term => term.trim());
     return data
-      .filter(item => 
-        item.location.toLowerCase().includes(destination.toLowerCase()) &&
-        (searchQuery === "" || 
-         item.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
+      .filter(item => {
+        const locationMatch = item.location.toLowerCase().includes(destination.toLowerCase());
+        const searchMatch = searchTerms.some(term => 
+          item.name.toLowerCase().includes(term) ||
+          item.location.toLowerCase().includes(term) ||
+          (item.cuisine && item.cuisine.toLowerCase().includes(term))
+        );
+        return locationMatch && (searchQuery === "" || searchMatch);
+      });
   };
 
   // Show map for an activity

@@ -11,14 +11,42 @@ const unsplash = createApi({
   accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY || 'public-access-key'
 });
 
-async function getDestinationImage(destination: string, country: string) {
+async function getDestinationImage(destination: string, country: string, type?: string) {
   try {
+    let query = `${destination} ${country}`;
+    if (type) {
+      switch(type.toLowerCase()) {
+        case 'hotel':
+        case 'accommodation':
+          query += ' hotel architecture';
+          break;
+        case 'restaurant':
+        case 'food':
+          query += ' restaurant food';
+          break;
+        case 'attraction':
+        case 'landmark':
+          query += ' landmark tourist attraction';
+          break;
+        default:
+          query += ' landmark';
+      }
+    }
+    
     const result = await unsplash.search.getPhotos({
-      query: `${destination} ${country} landmark`,
+      query,
       orientation: 'landscape',
-      perPage: 1
+      perPage: 5,
+      orderBy: 'relevant'
     });
-    return result.response?.results[0]?.urls?.regular;
+    
+    // Randomly select one of the top 5 images
+    const photos = result.response?.results || [];
+    if (photos.length > 0) {
+      const randomIndex = Math.floor(Math.random() * Math.min(5, photos.length));
+      return photos[randomIndex]?.urls?.regular;
+    }
+    return null;
   } catch (error) {
     console.error('Error fetching image:', error);
     return null;
