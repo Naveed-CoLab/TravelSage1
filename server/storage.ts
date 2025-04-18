@@ -124,16 +124,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTrip(id: number): Promise<void> {
-    // Delete related trip days, activities, and bookings first
-    const tripDaysResult = await db.select().from(tripDays).where(eq(tripDays.tripId, id));
-    
-    for (const day of tripDaysResult) {
-      await db.delete(activities).where(eq(activities.tripDayId, day.id));
+    try {
+      // Start transaction for atomicity
+      await db.transaction(async (tx) => {
+        // First, get all trip days to find related activities
+        const tripDaysResult = await tx.select().from(tripDays).where(eq(tripDays.tripId, id));
+        
+        // Delete activities for each trip day
+        for (const day of tripDaysResult) {
+          await tx.delete(activities).where(eq(activities.tripDayId, day.id));
+        }
+        
+        // Delete bookings that might be related to activities
+        await tx.delete(bookings).where(eq(bookings.tripId, id));
+        
+        // Delete the trip days after activities are removed
+        await tx.delete(tripDays).where(eq(tripDays.tripId, id));
+        
+        // Finally delete the trip itself
+        const result = await tx.delete(trips).where(eq(trips.id, id)).returning({ id: trips.id });
+        
+        if (result.length === 0) {
+          throw new Error(`Trip with ID ${id} not found or could not be deleted`);
+        }
+      });
+      
+      console.log(`Successfully deleted trip with ID ${id} and all related data`);
+    } catch (error) {
+      console.error(`Error deleting trip with ID ${id}:`, error);
+      throw error;
     }
-    
-    await db.delete(tripDays).where(eq(tripDays.tripId, id));
-    await db.delete(bookings).where(eq(bookings.tripId, id));
-    await db.delete(trips).where(eq(trips.id, id));
   }
 
   // Trip day methods
@@ -161,9 +181,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTripDay(id: number): Promise<void> {
-    // Delete associated activities first
-    await db.delete(activities).where(eq(activities.tripDayId, id));
-    await db.delete(tripDays).where(eq(tripDays.id, id));
+    try {
+      await db.transaction(async (tx) => {
+        // Delete associated activities first
+        await tx.delete(activities).where(eq(activities.tripDayId, id));
+        
+        // Then delete the trip day
+        const result = await tx.delete(tripDays).where(eq(tripDays.id, id)).returning({ id: tripDays.id });
+        
+        if (result.length === 0) {
+          throw new Error(`Trip day with ID ${id} not found or could not be deleted`);
+        }
+      });
+      
+      console.log(`Successfully deleted trip day with ID ${id} and all related activities`);
+    } catch (error) {
+      console.error(`Error deleting trip day with ID ${id}:`, error);
+      throw error;
+    }
   }
 
   // Activity methods
