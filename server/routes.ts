@@ -174,6 +174,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const trip = await storage.getTripById(day.tripId);
       
+      if (!trip) {
+        return res.status(404).json({ message: "Associated trip not found" });
+      }
+      
       if (trip.userId !== req.user.id) {
         return res.status(403).json({ message: "Not authorized to modify this trip" });
       }

@@ -23,7 +23,9 @@ import { eq, and, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 
+// Get the correct session store type
 const PostgresSessionStore = connectPg(session);
+type SessionStoreType = ReturnType<typeof PostgresSessionStore>;
 
 export interface IStorage {
   // User methods
@@ -65,11 +67,11 @@ export interface IStorage {
   createDestination(destination: InsertDestination): Promise<Destination>;
 
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any type to bypass the SessionStore type issue
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any type to bypass the SessionStore type issue
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
@@ -254,13 +256,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBooking(id: number): Promise<void> {
-    // Update any activities that reference this booking
-    await db
-      .update(activities)
-      .set({ bookingId: null })
-      .where(eq(activities.bookingId, id));
-    
-    await db.delete(bookings).where(eq(bookings.id, id));
+    try {
+      await db.transaction(async (tx) => {
+        // First, update any activities that reference this booking
+        await tx
+          .update(activities)
+          .set({ bookingId: null })
+          .where(eq(activities.bookingId, id));
+        
+        // Then delete the booking
+        const result = await tx.delete(bookings).where(eq(bookings.id, id)).returning({ id: bookings.id });
+        
+        if (result.length === 0) {
+          throw new Error(`Booking with ID ${id} not found or could not be deleted`);
+        }
+      });
+      
+      console.log(`Successfully deleted booking with ID ${id}`);
+    } catch (error) {
+      console.error(`Error deleting booking with ID ${id}:`, error);
+      throw error;
+    }
   }
 
   // Destination methods
