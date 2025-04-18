@@ -282,11 +282,21 @@ export default function BookingCard({ booking }: BookingCardProps) {
     window.open(fullUrl, '_blank');
   };
 
-  // Function to open OpenStreetMap directly
+  // Function to show the map inline
   const openInMaps = () => {
     if (mapLocation) {
-      const osmUrl = `https://www.openstreetmap.org/search?query=${encodeURIComponent(mapLocation)}`;
-      window.open(osmUrl, '_blank');
+      // Show the map
+      setShowMap(true);
+      
+      // If booking options aren't already showing, show them
+      if (!showBookingOptions) {
+        setShowBookingOptions(true);
+      }
+      
+      // Focus on the map element
+      if (mapRef.current) {
+        mapRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
   };
 
@@ -341,7 +351,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
                 className="h-7 text-xs px-2 text-blue-600"
                 onClick={openInMaps}
               >
-                View in OpenStreetMap
+                Show Map
               </Button>
             </div>
             
