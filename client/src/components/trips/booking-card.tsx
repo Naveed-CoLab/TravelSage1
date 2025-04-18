@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plane, Hotel, Ticket, DollarSign, Check, ExternalLink, Calendar } from "lucide-react";
+import { Plane, Hotel, Ticket, DollarSign, Check, ExternalLink, Calendar, MapPin } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type BookingCardProps = {
   booking: {
@@ -44,6 +45,156 @@ const hotelBookingProviders = [
 export default function BookingCard({ booking }: BookingCardProps) {
   const [bookingUrl, setBookingUrl] = useState<string | null>(null);
   const [showBookingOptions, setShowBookingOptions] = useState(false);
+  const [mapLocation, setMapLocation] = useState<string | null>(null);
+  const [showMap, setShowMap] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  
+  // Extract location from booking details
+  useEffect(() => {
+    // Check if booking is a hotel type
+    const isHotel = booking.type.toLowerCase() === 'hotel' || booking.type.toLowerCase() === 'accommodation';
+    
+    if (isHotel) {
+      let location = booking.title;
+      
+      // If booking has location details, use that
+      if (booking.details) {
+        const details = typeof booking.details === 'string' 
+          ? JSON.parse(booking.details) 
+          : booking.details;
+          
+        if (details.location) {
+          location = details.location;
+        }
+      }
+      
+      setMapLocation(location);
+    }
+  }, [booking]);
+  
+  // Initialize map when component mounts
+  useEffect(() => {
+    // Only initialize map if we have a location and the map is visible
+    if (mapLocation && showMap && mapRef.current) {
+      // Using OpenStreetMap which is free and doesn't require any API key
+      const iframe = document.createElement('iframe');
+      iframe.style.width = '100%';
+      iframe.style.height = '150px';
+      iframe.style.border = 'none';
+      iframe.style.borderRadius = '8px';
+      
+      // Encode the location for URL safety
+      const encodedLocation = encodeURIComponent(mapLocation);
+      
+      // Create an OpenStreetMap iframe with the location
+      const openStreetMapHtml = `
+        <html>
+          <head>
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+                  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+                  crossorigin=""/>
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+                    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+                    crossorigin=""></script>
+            <style>
+              body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                font-family: system-ui, sans-serif;
+              }
+              #map {
+                height: 100%;
+                width: 100%;
+                border-radius: 8px;
+              }
+              .leaflet-marker-icon {
+                filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));
+              }
+              .map-attribution {
+                font-size: 10px;
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                background: rgba(255,255,255,0.7);
+                padding: 2px 5px;
+                border-radius: 3px;
+                z-index: 1000;
+              }
+            </style>
+          </head>
+          <body>
+            <div id="map"></div>
+            <script>
+              // Initialize the map
+              const map = L.map('map', {
+                zoomControl: false,
+                attributionControl: false
+              });
+              
+              // Add the OpenStreetMap tiles
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              }).addTo(map);
+              
+              // Add a marker for the location
+              const marker = L.marker([0, 0]).addTo(map);
+              
+              // Use the Nominatim service to geocode the location
+              fetch(\`https://nominatim.openstreetmap.org/search?format=json&q=\${encodeURIComponent("${mapLocation}")}\`)
+                .then(response => response.json())
+                .then(data => {
+                  if (data && data.length > 0) {
+                    // Set map view to the coordinates
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    map.setView([lat, lon], 15);
+                    marker.setLatLng([lat, lon]);
+                    
+                    // Add a popup with the location name
+                    marker.bindPopup("${mapLocation}").openPopup();
+                  } else {
+                    // Fallback if geocoding fails
+                    document.getElementById('map').innerHTML = \`
+                      <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f0f4f8; text-align:center; padding:20px; border-radius:8px;">
+                        <div style="font-size:24px; margin-bottom:10px;">📍</div>
+                        <div style="font-weight:600; font-size:14px;">${mapLocation}</div>
+                        <div style="font-size:12px; color:#666; margin-top:10px;">Location coordinates not found</div>
+                      </div>
+                    \`;
+                  }
+                })
+                .catch(error => {
+                  console.error('Error loading map:', error);
+                  document.getElementById('map').innerHTML = \`
+                    <div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f0f4f8; text-align:center; padding:20px; border-radius:8px;">
+                      <div style="font-size:24px; margin-bottom:10px;">📍</div>
+                      <div style="font-weight:600; font-size:14px;">${mapLocation}</div>
+                      <div style="font-size:12px; color:#666; margin-top:10px;">Map could not be loaded</div>
+                    </div>
+                  \`;
+                });
+                
+              // Add attribution
+              const attribution = document.createElement('div');
+              attribution.className = 'map-attribution';
+              attribution.innerHTML = '© OpenStreetMap contributors';
+              document.body.appendChild(attribution);
+            </script>
+          </body>
+        </html>
+      `;
+      
+      iframe.srcdoc = openStreetMapHtml;
+      
+      if (mapRef.current) {
+        mapRef.current.innerHTML = '';
+        mapRef.current.appendChild(iframe);
+      }
+    }
+  }, [mapLocation, showMap]);
   
   // Function to get icon based on booking type
   const getBookingIcon = () => {
@@ -113,6 +264,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
     
     if (bookingType === 'hotel' || bookingType === 'accommodation') {
       setShowBookingOptions(true);
+      setShowMap(true); // Show map when booking options are displayed
     } else {
       // For other booking types, just show details
       console.log("Viewing details for:", booking.title);
@@ -121,12 +273,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
 
   const redirectToBookingProvider = (provider: typeof hotelBookingProviders[0]) => {
     // Construct search query from booking details
-    let searchQuery = booking.title;
-    
-    // If booking has location details, include those
-    if (booking.details && booking.details.location) {
-      searchQuery = booking.details.location;
-    }
+    let searchQuery = mapLocation || booking.title;
     
     // Create the full URL with search parameters
     const fullUrl = `${provider.url}${provider.searchParams(searchQuery)}`;
@@ -134,6 +281,17 @@ export default function BookingCard({ booking }: BookingCardProps) {
     // Open in a new tab
     window.open(fullUrl, '_blank');
   };
+
+  // Function to open OpenStreetMap directly
+  const openInMaps = () => {
+    if (mapLocation) {
+      const osmUrl = `https://www.openstreetmap.org/search?query=${encodeURIComponent(mapLocation)}`;
+      window.open(osmUrl, '_blank');
+    }
+  };
+
+  // Check if this is a hotel booking
+  const isHotelBooking = booking.type.toLowerCase() === 'hotel' || booking.type.toLowerCase() === 'accommodation';
 
   return (
     <Card className={`overflow-hidden border ${getBookingColor()} hover:shadow-md transition-all`}>
@@ -169,8 +327,37 @@ export default function BookingCard({ booking }: BookingCardProps) {
         
         {formatDetails()}
         
+        {/* Map for hotel bookings */}
+        {isHotelBooking && mapLocation && (
+          <div className="mt-4 border-t pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-gray-600 flex items-center">
+                <MapPin className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
+                Location
+              </p>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 text-xs px-2 text-blue-600"
+                onClick={openInMaps}
+              >
+                View in OpenStreetMap
+              </Button>
+            </div>
+            
+            <div 
+              ref={mapRef} 
+              className="h-[150px] w-full rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center relative mb-3"
+            >
+              {!showMap && (
+                <Skeleton className="h-full w-full absolute inset-0" />
+              )}
+            </div>
+          </div>
+        )}
+        
         {/* Booking options for hotels */}
-        {showBookingOptions && (booking.type.toLowerCase() === 'hotel' || booking.type.toLowerCase() === 'accommodation') && (
+        {showBookingOptions && isHotelBooking && (
           <div className="mt-4 border-t pt-3">
             <p className="text-sm text-gray-600 mb-2">Book this accommodation with:</p>
             <div className="grid grid-cols-2 gap-2">
@@ -198,7 +385,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
             size="sm"
             onClick={handleBookingAction}
           >
-            {booking.type.toLowerCase() === 'hotel' || booking.type.toLowerCase() === 'accommodation' ? (
+            {isHotelBooking ? (
               <>
                 <Calendar className="h-3.5 w-3.5 mr-1.5" />
                 Book Now
@@ -214,7 +401,10 @@ export default function BookingCard({ booking }: BookingCardProps) {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => setShowBookingOptions(false)}
+            onClick={() => {
+              setShowBookingOptions(false);
+              setShowMap(false);
+            }}
           >
             Hide Options
           </Button>
