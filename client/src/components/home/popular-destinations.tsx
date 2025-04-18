@@ -2,10 +2,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { createApi } from "unsplash-js";
-import DestinationCard from "@/components/trips/destination-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
+import romeImg from "@assets/image_1745004323842.png";
+
+// Import destination images from assets if available
+import parisImg from "@assets/paris.jpg";
+import lasVegasImg from "@assets/lasvegas.jpg";
+import reykjavikImg from "@assets/reykjavik.jpg";
 
 const unsplash = createApi({
   accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY || 'public-access-key'
@@ -54,105 +59,324 @@ async function getDestinationImage(destination: string, country: string, type?: 
 }
 
 export default function PopularDestinations() {
-  const { data: destinations, isLoading, error } = useQuery({
-    queryKey: ["/api/destinations"],
-    select: async (data) => {
-      if (!data || data.length === 0) {
-        const fallbackDestinations = [
-          {
-            id: 1,
-            name: "Tokyo",
-            country: "Japan",
-            description: "Experience the perfect blend of tradition and modernity in Japan's vibrant capital.",
-            rating: "4.8",
-            reviewCount: 2450,
-            priceEstimate: "From $1,200"
-          },
-          {
-            id: 2,
-            name: "Paris",
-            country: "France",
-            description: "Experience the romance, art, and cuisine of the iconic City of Light.",
-            rating: "4.9",
-            reviewCount: 3210,
-            priceEstimate: "From $950"
-          },
-          {
-            id: 3,
-            name: "Santorini",
-            country: "Greece",
-            description: "Discover the breathtaking views and pristine beaches of this Mediterranean paradise.",
-            rating: "4.7",
-            reviewCount: 1890,
-            priceEstimate: "From $850"
-          }
-        ];
-        data = fallbackDestinations;
-      }
+  // Use these predefined destinations to match the design
+  const topDestinations = [
+    {
+      id: 1,
+      name: "Rome",
+      country: "Italy",
+      imageUrl: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+    },
+    {
+      id: 2,
+      name: "Paris",
+      country: "France",
+      imageUrl: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+    },
+    {
+      id: 3,
+      name: "Las Vegas",
+      country: "NV",
+      imageUrl: "https://images.unsplash.com/photo-1605833556294-ea5c7a74f57d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+    },
+    {
+      id: 4,
+      name: "Reykjavik",
+      country: "Iceland",
+      imageUrl: "https://images.unsplash.com/photo-1504233529578-6d46baba6d34?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+    },
+  ];
 
-      // Fetch images for each destination
-      const destinationsWithImages = await Promise.all(
-        data.map(async (dest) => ({
-          ...dest,
-          imageUrl: await getDestinationImage(dest.name, dest.country) ||
-            `https://source.unsplash.com/featured/?${encodeURIComponent(dest.name + ' ' + dest.country)}`
-        }))
-      );
+  // Hotel experience cards based on design
+  const hotelExperiences = [
+    {
+      id: 1,
+      name: "Havana Vieja",
+      location: "Miami Beach",
+      rating: 4.5,
+      reviewCount: 1365,
+      priceLevel: "$$-$$$",
+      categories: "Caribbean, Latin, Bar",
+      imageUrl: "https://images.unsplash.com/photo-1590073242678-70ee3fc28f8a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+    },
+    {
+      id: 2,
+      name: "Esquina Cubana",
+      location: "Miami Beach",
+      rating: 4.5,
+      reviewCount: 567,
+      priceLevel: "$$-$$$",
+      categories: "Bar, Seafood, Contemporary",
+      imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+    },
+    {
+      id: 3,
+      name: "On Ocean 7 Cafe",
+      location: "Miami Beach",
+      rating: 4.5,
+      reviewCount: 2413,
+      priceLevel: "$$-$$$",
+      categories: "American, Bar, Seafood",
+      imageUrl: "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+    },
+    {
+      id: 4,
+      name: "Mama's Tacos • Latin Restaurant",
+      location: "Miami Beach",
+      rating: 4.5,
+      reviewCount: 1076,
+      priceLevel: "$$-$$$",
+      categories: "Latin, Seafood, Vegetarian friendly",
+      imageUrl: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+    },
+  ];
 
-      return destinationsWithImages;
-    }
-  });
+  // Travel experiences based on design
+  const travelExperiences = [
+    {
+      id: 1,
+      name: "The Unvanquished Tour in Porto City Center",
+      rating: 5.0,
+      reviewCount: 18177,
+      price: "from $3 per adult",
+      year: "2024",
+      imageUrl: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+    },
+    {
+      id: 2,
+      name: "All-inclusive Ubud Private Tour",
+      rating: 5.0,
+      reviewCount: 12146,
+      price: "from $100 per adult",
+      year: "2024",
+      imageUrl: "https://images.unsplash.com/photo-1604999333679-b86d54738315?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+    },
+    {
+      id: 3,
+      name: "All Inclusive 90 minutes Canal Cruise by Captain Jack!",
+      rating: 4.5,
+      reviewCount: 12057,
+      price: "from $26 per adult",
+      year: "2024",
+      badge: "BEST SELLER",
+      imageUrl: "https://images.unsplash.com/photo-1528728329032-2972f65dfb3f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+    },
+    {
+      id: 4,
+      name: "Small-Group Explore Angkor Wat Sunrise Tour with Guide from Siem Reap",
+      rating: 5.0,
+      reviewCount: 9364,
+      price: "from $19 per adult",
+      year: "2024",
+      imageUrl: "https://images.unsplash.com/photo-1564587432145-5d57a8aaef72?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+    },
+  ];
 
   return (
-    <section className="py-12 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">Popular Destinations</h2>
-          <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-            Discover trending locations loved by travelers worldwide
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {isLoading ? (
-            Array(3).fill(0).map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <Skeleton className="h-60 w-full" />
-                <div className="p-4">
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2 mb-2" />
-                  <Skeleton className="h-4 w-full mb-4" />
-                  <div className="flex items-center justify-between">
-                    <Skeleton className="h-5 w-20" />
-                    <Skeleton className="h-8 w-20 rounded" />
+    <>
+      {/* Top destinations section */}
+      <section className="py-10 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Top destinations for your next vacation</h2>
+          
+          <div className="relative">
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide">
+              {topDestinations.map((destination) => (
+                <div 
+                  key={destination.id} 
+                  className="relative min-w-[260px] rounded-xl overflow-hidden shadow-sm flex-shrink-0 snap-start group cursor-pointer"
+                >
+                  <img 
+                    src={destination.imageUrl}
+                    alt={`${destination.name}, ${destination.country}`}
+                    className="w-full h-44 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://source.unsplash.com/featured/?${encodeURIComponent(destination.name + ' ' + destination.country)}`;
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 p-4 text-white">
+                    <h3 className="text-xl font-bold">{destination.name}, {destination.country}</h3>
                   </div>
                 </div>
-              </div>
-            ))
-          ) : error ? (
-            <div className="col-span-3 text-center py-10">
-              <p className="text-gray-500">Error loading destinations. Please try again later.</p>
+              ))}
             </div>
-          ) : destinations && destinations.length > 0 ? (
-            destinations.map((destination) => (
-              <DestinationCard key={destination.id} destination={destination} />
-            ))
-          ) : (
-            <div className="col-span-3 text-center py-10">
-              <p className="text-gray-500">No destinations found</p>
-            </div>
-          )}
+            
+            <button className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+              <ChevronLeft className="h-6 w-6 text-gray-600" />
+            </button>
+            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+              <ChevronRight className="h-6 w-6 text-gray-600" />
+            </button>
+          </div>
         </div>
+      </section>
 
-        <div className="mt-10 text-center">
-          <Link href="/explore">
-            <Button variant="link" className="text-primary-600 font-medium hover:text-primary-700">
-              View all destinations
-              <ChevronRight className="ml-1 h-5 w-5" />
-            </Button>
-          </Link>
+      {/* Restaurant recommendations section */}
+      <section className="py-10 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">You might like these</h2>
+              <p className="text-gray-600 text-sm">More restaurants in Miami Beach</p>
+            </div>
+          </div>
+          
+          <div className="relative">
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide">
+              {hotelExperiences.map((hotel) => (
+                <div 
+                  key={hotel.id} 
+                  className="relative min-w-[300px] rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0 snap-start cursor-pointer"
+                >
+                  <div className="relative h-44">
+                    <img 
+                      src={hotel.imageUrl}
+                      alt={hotel.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://source.unsplash.com/featured/?restaurant,food`;
+                      }}
+                    />
+                    <button className="absolute top-2 right-2 rounded-full bg-white p-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-green-600 text-white text-xs font-bold rounded px-1.5 py-1">
+                      TripAdvisor
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex">
+                      <div className="text-green-700 flex items-center gap-1">
+                        <span className="font-bold">{hotel.rating}</span>
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <svg key={i} className={`w-3 h-3 ${i < Math.floor(hotel.rating) ? 'text-green-700 fill-current' : 'text-gray-300'}`} viewBox="0 0 20 20">
+                              <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                            </svg>
+                          ))}
+                        </div>
+                        <span className="text-gray-500 text-xs">({hotel.reviewCount})</span>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-gray-900 mt-1">{hotel.name}</h3>
+                    <div className="text-gray-500 text-sm">{hotel.priceLevel} • {hotel.categories}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <button className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+              <ChevronLeft className="h-6 w-6 text-gray-600" />
+            </button>
+            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+              <ChevronRight className="h-6 w-6 text-gray-600" />
+            </button>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Top experiences section */}
+      <section className="py-10 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Top experiences on Tripadvisor</h2>
+          
+          <div className="relative">
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide">
+              {travelExperiences.map((exp) => (
+                <div 
+                  key={exp.id} 
+                  className="relative min-w-[300px] rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0 snap-start cursor-pointer"
+                >
+                  <div className="relative h-44">
+                    <img 
+                      src={exp.imageUrl}
+                      alt={exp.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://source.unsplash.com/featured/?travel,tour`;
+                      }}
+                    />
+                    <button className="absolute top-2 right-2 rounded-full bg-white p-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-amber-500 text-black text-xs font-bold rounded-sm px-2 py-1">
+                      {exp.year}
+                    </div>
+                    {exp.badge && (
+                      <div className="absolute top-2 left-2 bg-blue-900 text-white text-xs font-bold px-2 py-1 rounded-sm">
+                        {exp.badge}
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-2">{exp.name}</h3>
+                    <div className="flex items-center mb-1">
+                      <span className="font-bold text-sm">{exp.rating}</span>
+                      <div className="flex ml-1">
+                        {[...Array(5)].map((_, i) => (
+                          <svg key={i} className={`w-3 h-3 ${i < Math.floor(exp.rating) ? 'text-green-700 fill-current' : 'text-gray-300'}`} viewBox="0 0 20 20">
+                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="text-gray-500 text-xs ml-1">({exp.reviewCount})</span>
+                    </div>
+                    <div className="text-gray-700 text-sm">{exp.price}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <button className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+              <ChevronLeft className="h-6 w-6 text-gray-600" />
+            </button>
+            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block">
+              <ChevronRight className="h-6 w-6 text-gray-600" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Traveler's Choice Awards Banner */}
+      <section className="py-10 bg-amber-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="md:w-1/2 lg:w-2/5">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-amber-400 rounded-full p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-black" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </div>
+                <span className="font-bold text-black text-lg">Travelers' Choice</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-black mb-3">Awards Best of the Best</h2>
+              <p className="text-gray-700 text-sm mb-4">
+                Among our top 1% of places, stays, eats, and experiences—decided by you.
+              </p>
+              <Button variant="outline" className="rounded-full bg-black text-white border-black hover:bg-gray-800 px-4">
+                See the winners
+              </Button>
+            </div>
+            <div className="md:w-1/2 lg:w-3/5 relative">
+              <div className="aspect-[16/9] rounded-xl overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1528127269322-539801943592?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+                  alt="Traveler with backpack"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-green-500"></div>
+              <div className="absolute -bottom-4 left-10 w-16 h-16 rounded-full bg-amber-400"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
