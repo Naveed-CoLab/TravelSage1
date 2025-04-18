@@ -385,7 +385,7 @@ export default function FlightsPage() {
                     <Calendar
                       mode="single"
                       selected={departDate || undefined}
-                      onSelect={(date) => setDepartDate(date)}
+                      onSelect={(date: Date | undefined) => setDepartDate(date || null)}
                       initialFocus
                     />
                   </PopoverContent>
@@ -410,7 +410,7 @@ export default function FlightsPage() {
                       <Calendar
                         mode="single"
                         selected={returnDate || undefined}
-                        onSelect={(date) => setReturnDate(date)}
+                        onSelect={(date: Date | undefined) => setReturnDate(date || null)}
                         initialFocus
                       />
                     </PopoverContent>

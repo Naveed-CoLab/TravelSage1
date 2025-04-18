@@ -49,6 +49,9 @@ export default function Navbar() {
               <Link href="/explore" className={`${isActive('/explore') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200`}>
                 Explore
               </Link>
+              <Link href="/flights" className={`${isActive('/flights') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200`}>
+                Flights
+              </Link>
               {user && (
                 <Link href="/trips" className={`${isActive('/trips') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200`}>
                   My Trips
@@ -198,6 +201,16 @@ export default function Navbar() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                         </svg>
                         Explore
+                      </Link>
+                      <Link 
+                        href="/flights" 
+                        className={`${isActive('/flights') ? 'bg-primary-50 text-primary-700 border-primary-500' : 'border-transparent text-gray-700 hover:bg-gray-50'} flex items-center px-3 py-2 text-sm font-medium rounded-md border-l-[3px] transition-colors duration-200`}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3l4 9h7l-4 9M3 13h18" />
+                        </svg>
+                        Flights
                       </Link>
                       {user && (
                         <Link 
