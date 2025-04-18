@@ -16,14 +16,15 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative h-[550px] flex items-center justify-center px-4 text-white overflow-hidden">
-      {/* Background image with overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center z-0" 
-        style={{
-          backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1494783367193-149034c05e8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')"
-        }}
-      />
+    <section className="relative h-[650px] flex items-center justify-center px-4 text-white overflow-hidden">
+      {/* Modern gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-800 to-primary-900 opacity-90 z-0" />
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1494783367193-149034c05e8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')] bg-cover bg-center mix-blend-overlay" />
+      {/* Animated shapes */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute w-96 h-96 -top-48 -left-48 bg-primary-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob" />
+        <div className="absolute w-96 h-96 -bottom-48 -right-48 bg-primary-600 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000" />
+      </div>
       
       {/* Content */}
       <div className="max-w-4xl mx-auto text-center z-10">
