@@ -1,7 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card";
+
 import { useLocation } from "wouter";
+import { Star, StarHalf } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Star, StarHalf } from "lucide-react";
 
 type DestinationCardProps = {
   destination: {
@@ -19,7 +19,6 @@ type DestinationCardProps = {
 export default function DestinationCard({ destination }: DestinationCardProps) {
   const [, navigate] = useLocation();
 
-  // Create star rating display
   const renderStars = (rating: string) => {
     const ratingNum = parseFloat(rating);
     const fullStars = Math.floor(ratingNum);
@@ -44,40 +43,43 @@ export default function DestinationCard({ destination }: DestinationCardProps) {
   };
 
   return (
-    <Card className="group relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <div className="relative h-60 w-full overflow-hidden">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="relative h-60">
         <img
-          className="h-full w-full object-cover transform group-hover:scale-105 transition-transform duration-300"
           src={destination.imageUrl}
           alt={`${destination.name}, ${destination.country}`}
+          className="w-full h-full object-cover"
+          loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black opacity-60"></div>
-        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-          <h3 className="text-xl font-bold">{destination.name}, {destination.country}</h3>
-          <div className="flex items-center mt-1">
-            {renderStars(destination.rating)}
-            <span className="ml-1 text-sm">
-              {destination.rating} {destination.reviewCount && `(${destination.reviewCount.toLocaleString()} reviews)`}
-            </span>
-          </div>
-        </div>
       </div>
-      <CardContent className="p-4">
-        <p className="text-sm text-gray-500 line-clamp-2 mb-4">{destination.description}</p>
-        <div className="flex items-center justify-between">
-          {destination.priceEstimate && (
-            <span className="text-primary-600 font-semibold">{destination.priceEstimate}</span>
+      <div className="p-4">
+        <h3 className="text-lg font-semibold text-gray-900">
+          {destination.name}, {destination.country}
+        </h3>
+        <div className="flex items-center mt-1 space-x-1">
+          {renderStars(destination.rating)}
+          {destination.reviewCount && (
+            <span className="text-sm text-gray-500">
+              ({destination.reviewCount.toLocaleString()} reviews)
+            </span>
           )}
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={handleExplore}
-            className="bg-primary-100 text-primary-800 hover:bg-primary-200 transition-colors border-none"
-          >
-            Explore
-          </Button>
         </div>
-      </CardContent>
-    </Card>
+        <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+          {destination.description}
+        </p>
+        {destination.priceEstimate && (
+          <p className="mt-2 text-sm font-medium text-gray-900">
+            {destination.priceEstimate}
+          </p>
+        )}
+        <Button
+          onClick={handleExplore}
+          className="mt-4 w-full"
+          variant="default"
+        >
+          Plan Trip
+        </Button>
+      </div>
+    </div>
   );
 }
