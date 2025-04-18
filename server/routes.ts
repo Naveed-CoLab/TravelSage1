@@ -287,61 +287,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to access this trip" });
       }
       
+      // Generate itinerary - this will now use fallback data if API key is missing
       const itinerary = await generateItinerary(trip);
       
-      // Process and save the generated itinerary
-      for (const day of itinerary.days) {
-        const tripDay = await storage.createTripDay({
-          tripId: trip.id,
-          dayNumber: day.dayNumber,
-          title: day.title,
-          date: day.date
+      try {
+        // Check if the trip already has days/activities before adding new ones
+        const existingDays = await storage.getTripDaysByTripId(trip.id);
+        if (existingDays.length > 0) {
+          // Delete existing days and their activities before adding new ones
+          for (const day of existingDays) {
+            const activities = await storage.getActivitiesByTripDayId(day.id);
+            for (const activity of activities) {
+              await storage.deleteActivity(activity.id);
+            }
+            await storage.deleteTripDay(day.id);
+          }
+        }
+        
+        // Delete existing bookings before adding new ones
+        const existingBookings = await storage.getBookingsByTripId(trip.id);
+        for (const booking of existingBookings) {
+          await storage.deleteBooking(booking.id);
+        }
+        
+        // Process and save the generated itinerary
+        for (const day of itinerary.days) {
+          const dateString = day.date instanceof Date ? day.date.toISOString() : day.date;
+          
+          const tripDay = await storage.createTripDay({
+            tripId: trip.id,
+            dayNumber: day.dayNumber,
+            title: day.title,
+            date: dateString
+          });
+          
+          for (const activity of day.activities) {
+            await storage.createActivity({
+              tripDayId: tripDay.id,
+              title: activity.title,
+              description: activity.description,
+              time: activity.time,
+              location: activity.location,
+              type: activity.type
+            });
+          }
+        }
+        
+        // Save bookings if any
+        if (itinerary.bookings && itinerary.bookings.length > 0) {
+          for (const booking of itinerary.bookings) {
+            await storage.createBooking({
+              tripId: trip.id,
+              type: booking.type,
+              title: booking.title,
+              provider: booking.provider,
+              price: booking.price,
+              details: booking.details,
+              confirmed: false
+            });
+          }
+        }
+        
+        // Update trip status
+        await storage.updateTrip(trip.id, {
+          ...trip,
+          status: "planned"
         });
         
-        for (const activity of day.activities) {
-          await storage.createActivity({
-            tripDayId: tripDay.id,
-            title: activity.title,
-            description: activity.description,
-            time: activity.time,
-            location: activity.location,
-            type: activity.type
-          });
-        }
+        // Get updated trip data
+        const updatedTrip = await storage.getTripById(trip.id);
+        const tripDays = await storage.getTripDaysByTripId(trip.id);
+        const bookings = await storage.getBookingsByTripId(trip.id);
+        
+        // Combine trip days with their activities for the response
+        const daysWithActivities = await Promise.all(
+          tripDays.map(async (day) => {
+            const activities = await storage.getActivitiesByTripDayId(day.id);
+            return { ...day, activities };
+          })
+        );
+        
+        // Send the complete trip data
+        res.json({
+          ...updatedTrip,
+          days: daysWithActivities,
+          bookings
+        });
+      } catch (dbError) {
+        console.error("Error saving itinerary data:", dbError);
+        res.status(500).json({ 
+          message: "Error occurred while saving itinerary",
+          itinerary: itinerary // Return the generated itinerary even if saving failed
+        });
       }
-      
-      // Save bookings if any
-      if (itinerary.bookings && itinerary.bookings.length > 0) {
-        for (const booking of itinerary.bookings) {
-          await storage.createBooking({
-            tripId: trip.id,
-            type: booking.type,
-            title: booking.title,
-            provider: booking.provider,
-            price: booking.price,
-            details: booking.details,
-            confirmed: false
-          });
-        }
-      }
-      
-      const updatedTrip = await storage.getTripById(trip.id);
-      const tripDays = await storage.getTripDaysByTripId(trip.id);
-      const bookings = await storage.getBookingsByTripId(trip.id);
-      
-      const daysWithActivities = await Promise.all(
-        tripDays.map(async (day) => {
-          const activities = await storage.getActivitiesByTripDayId(day.id);
-          return { ...day, activities };
-        })
-      );
-      
-      res.json({
-        ...updatedTrip,
-        days: daysWithActivities,
-        bookings
-      });
     } catch (error) {
+      console.error("Error in itinerary generation:", error);
       res.status(500).json({ message: "Failed to generate itinerary" });
     }
   });

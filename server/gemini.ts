@@ -49,6 +49,12 @@ export async function generateTripIdea(
     const preferencesString = preferences ? preferences.join(", ") : "general tourism";
     const durationString = duration || "a week";
     
+    // Check if API key is missing - if so, immediately return fallback data
+    if (!GEMINI_API_KEY) {
+      console.warn("No GEMINI_API_KEY provided. Using fallback trip idea data.");
+      return generateFallbackTripIdea(destination, preferencesString, durationString);
+    }
+    
     const prompt = `
       Create a travel plan idea for a trip to ${destination}.
       The traveler is interested in: ${preferencesString}.
@@ -89,7 +95,8 @@ export async function generateTripIdea(
     );
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.statusText}`);
+      console.error(`Gemini API error: ${response.statusText}`);
+      return generateFallbackTripIdea(destination, preferencesString, durationString);
     }
 
     const data = await response.json();
@@ -105,22 +112,110 @@ export async function generateTripIdea(
     } catch (e) {
       console.error("Failed to parse Gemini response as JSON:", e);
       console.error("Raw response:", text);
-      
-      // Fallback to a dummy response when parsing fails
-      result = {
-        summary: `A trip to ${destination} focusing on ${preferencesString}.`,
-        highlights: ["Visit local attractions", "Experience local cuisine", "Explore cultural sites"],
-        bestTimeToVisit: "Depends on the season",
-        estimatedBudget: "$1,000 - $3,000 per person",
-        recommendedDuration: durationString,
-      };
+      return generateFallbackTripIdea(destination, preferencesString, durationString);
     }
     
     return result;
   } catch (error) {
     console.error("Error generating trip idea:", error);
-    throw new Error("Failed to generate trip idea. Please try again later.");
+    return generateFallbackTripIdea(destination, preferences?.join(", ") || "general tourism", duration || "a week");
   }
+}
+
+// Helper function to generate fallback trip ideas when the API is unavailable
+function generateFallbackTripIdea(destination: string, preferences: string, duration: string): TripIdea {
+  // Create destination-specific trip ideas based on common tourist destinations
+  let tripIdea: TripIdea;
+  
+  // Customize trip idea based on destination
+  switch(destination.toLowerCase()) {
+    case 'tokyo':
+    case 'japan':
+      tripIdea = {
+        summary: "Experience the perfect blend of ancient traditions and futuristic innovation in Japan. From serene temples and gardens to bustling city streets and technological wonders, Japan offers a unique cultural experience that will captivate any traveler.",
+        highlights: [
+          "Visit the historic Senso-ji Temple in Asakusa",
+          "Experience the organized chaos of Shibuya Crossing",
+          "Take in breathtaking views of Mt. Fuji",
+          "Explore the pop culture district of Akihabara",
+          "Enjoy authentic Japanese cuisine from sushi to ramen"
+        ],
+        bestTimeToVisit: "Late March to May for cherry blossoms, or October to November for autumn foliage",
+        estimatedBudget: "$150-300 per day including accommodations, food, and activities",
+        recommendedDuration: "10-14 days to explore Tokyo and surrounding areas"
+      };
+      break;
+      
+    case 'paris':
+    case 'france':
+      tripIdea = {
+        summary: "Discover the romance and charm of Paris, the City of Light. Known for its iconic landmarks, world-class museums, and exquisite cuisine, Paris offers a perfect blend of history, culture, and beauty that makes it one of the world's most visited destinations.",
+        highlights: [
+          "Marvel at the iconic Eiffel Tower",
+          "Explore the vast art collections at the Louvre Museum",
+          "Visit the Gothic masterpiece Notre-Dame Cathedral",
+          "Stroll along the elegant Champs-Élysées",
+          "Experience Parisian café culture"
+        ],
+        bestTimeToVisit: "April to June or September to October for mild weather and fewer crowds",
+        estimatedBudget: "$150-250 per day including accommodations, food, and activities",
+        recommendedDuration: "5-7 days to experience the main attractions of Paris"
+      };
+      break;
+      
+    case 'rome':
+    case 'italy':
+      tripIdea = {
+        summary: "Step back in time in Rome, the Eternal City, where ancient history meets modern Italian life. With its incredible archaeological sites, Renaissance masterpieces, and vibrant streets, Rome offers an unforgettable journey through the layers of Western civilization.",
+        highlights: [
+          "Explore the ancient Colosseum and Roman Forum",
+          "Visit Vatican City and St. Peter's Basilica",
+          "Toss a coin in the Trevi Fountain",
+          "Marvel at the perfect dome of the Pantheon",
+          "Indulge in authentic Italian cuisine"
+        ],
+        bestTimeToVisit: "April to May or September to October for pleasant weather and thinner crowds",
+        estimatedBudget: "$120-200 per day including accommodations, food, and activities",
+        recommendedDuration: "4-6 days to see Rome's major attractions"
+      };
+      break;
+      
+    case 'new york':
+    case 'new york city':
+    case 'usa':
+      tripIdea = {
+        summary: "Experience the energy and diversity of New York City, the city that never sleeps. From iconic skyscrapers and world-class museums to diverse neighborhoods and Broadway shows, NYC offers endless possibilities for exploration and entertainment.",
+        highlights: [
+          "Take in the views from the Empire State Building or One World Observatory",
+          "Stroll through the urban oasis of Central Park",
+          "Visit the Metropolitan Museum of Art",
+          "Experience the bright lights of Times Square",
+          "Explore diverse neighborhoods like Greenwich Village and Brooklyn"
+        ],
+        bestTimeToVisit: "April to June or September to November for mild weather and fewer tourists",
+        estimatedBudget: "$200-350 per day including accommodations, food, and activities",
+        recommendedDuration: "5-7 days to experience the highlights of NYC"
+      };
+      break;
+      
+    // Default fallback for any other destination
+    default:
+      tripIdea = {
+        summary: `A journey to ${destination} focusing on ${preferences}. This trip offers a perfect balance of exploration, relaxation, and cultural immersion.`,
+        highlights: [
+          "Explore the main attractions and historical sites",
+          "Sample local cuisine and culinary specialties",
+          "Immerse yourself in the local culture and traditions",
+          "Visit museums and cultural institutions",
+          "Discover hidden gems off the typical tourist path"
+        ],
+        bestTimeToVisit: "Spring or fall for the most pleasant weather conditions",
+        estimatedBudget: "$100-200 per day depending on accommodation choices and activities",
+        recommendedDuration: duration
+      };
+  }
+  
+  return tripIdea;
 }
 
 export async function generateItinerary(trip: Trip): Promise<GeneratedItinerary> {
@@ -128,6 +223,12 @@ export async function generateItinerary(trip: Trip): Promise<GeneratedItinerary>
     const startDate = trip.startDate ? new Date(trip.startDate).toISOString().split('T')[0] : "unspecified start date";
     const endDate = trip.endDate ? new Date(trip.endDate).toISOString().split('T')[0] : "unspecified end date";
     const preferencesString = trip.preferences ? trip.preferences.join(", ") : "general tourism";
+    
+    // Check if API key is missing - if so, immediately return fallback data
+    if (!GEMINI_API_KEY) {
+      console.warn("No GEMINI_API_KEY provided. Using fallback itinerary data.");
+      return generateFallbackItinerary(trip);
+    }
     
     const prompt = `
       Create a detailed day-by-day itinerary for a trip to ${trip.destination}.
@@ -193,7 +294,8 @@ export async function generateItinerary(trip: Trip): Promise<GeneratedItinerary>
     );
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.statusText}`);
+      console.error(`Gemini API error: ${response.statusText}`);
+      return generateFallbackItinerary(trip);
     }
 
     const data = await response.json();
@@ -209,47 +311,7 @@ export async function generateItinerary(trip: Trip): Promise<GeneratedItinerary>
     } catch (e) {
       console.error("Failed to parse Gemini response as JSON:", e);
       console.error("Raw response:", text);
-      
-      // Generate a basic fallback itinerary when parsing fails
-      const numDays = trip.startDate && trip.endDate
-        ? Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 3600 * 24))
-        : 3;
-      
-      result = {
-        days: Array.from({ length: numDays }, (_, i) => ({
-          dayNumber: i + 1,
-          title: `Day ${i + 1}: Exploring ${trip.destination}`,
-          activities: [
-            {
-              title: "Morning exploration",
-              description: "Explore local attractions",
-              time: "9:00 AM",
-              type: "sightseeing"
-            },
-            {
-              title: "Lunch at local restaurant",
-              description: "Enjoy local cuisine",
-              time: "1:00 PM",
-              type: "meal"
-            },
-            {
-              title: "Afternoon activities",
-              description: "Visit cultural sites",
-              time: "3:00 PM",
-              type: "sightseeing"
-            }
-          ]
-        })),
-        bookings: [
-          {
-            type: "hotel",
-            title: `Accommodation in ${trip.destination}`,
-            provider: "Local Hotel",
-            price: trip.budget || "$150 per night",
-            details: { location: "City center" }
-          }
-        ]
-      };
+      return generateFallbackItinerary(trip);
     }
     
     // Add dates to the days if trip dates are specified
@@ -265,6 +327,133 @@ export async function generateItinerary(trip: Trip): Promise<GeneratedItinerary>
     return result;
   } catch (error) {
     console.error("Error generating itinerary:", error);
-    throw new Error("Failed to generate itinerary. Please try again later.");
+    return generateFallbackItinerary(trip);
   }
+}
+
+// Helper function to generate fallback itinerary data when API fails
+function generateFallbackItinerary(trip: Trip): GeneratedItinerary {
+  // Calculate number of days for the trip
+  const numDays = trip.startDate && trip.endDate
+    ? Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 3600 * 24))
+    : 3;
+  
+  // Create destination-specific itinerary based on common tourist destinations
+  let activities: Array<{title: string, description: string, time: string, type: string, location?: string}[]> = [];
+  let bookings: ItineraryBooking[] = [];
+  
+  // Customize activities based on destination
+  switch(trip.destination.toLowerCase()) {
+    case 'tokyo':
+    case 'japan':
+      activities = [
+        [
+          { title: "Visit Sensō-ji Temple", description: "Explore Tokyo's oldest and most famous Buddhist temple", time: "9:00 AM", type: "sightseeing", location: "Asakusa" },
+          { title: "Lunch at local ramen shop", description: "Try authentic Japanese ramen", time: "12:30 PM", type: "meal", location: "Asakusa area" },
+          { title: "Explore Akihabara", description: "Visit the electronics and anime district", time: "2:30 PM", type: "shopping", location: "Akihabara" }
+        ],
+        [
+          { title: "Tokyo Skytree", description: "Visit one of the tallest towers in the world", time: "10:00 AM", type: "sightseeing", location: "Sumida" },
+          { title: "Sushi lunch", description: "Experience traditional sushi at a local restaurant", time: "1:00 PM", type: "meal", location: "Tsukiji Outer Market" },
+          { title: "Meiji Shrine", description: "Visit the famous Shinto shrine", time: "3:30 PM", type: "sightseeing", location: "Shibuya" }
+        ],
+        [
+          { title: "Shibuya Crossing", description: "Experience the famous pedestrian crossing", time: "9:30 AM", type: "sightseeing", location: "Shibuya" },
+          { title: "Shopping in Harajuku", description: "Shop in Tokyo's fashion district", time: "11:30 AM", type: "shopping", location: "Harajuku" },
+          { title: "Robot Restaurant Show", description: "Experience a unique Japanese entertainment show", time: "7:00 PM", type: "entertainment", location: "Shinjuku" }
+        ]
+      ];
+      bookings = [
+        { type: "hotel", title: "Shinjuku Washington Hotel", provider: "Booking.com", price: "$120 per night", details: { location: "Shinjuku, central Tokyo" } },
+        { type: "activity", title: "Robot Restaurant Show Tickets", provider: "Viator", price: "$80 per person", details: { duration: "90 minutes" } },
+        { type: "transportation", title: "Tokyo Metro 72-Hour Pass", provider: "Tokyo Metro", price: "$20 per person", details: { validity: "72 hours" } }
+      ];
+      break;
+      
+    case 'paris':
+    case 'france':
+      activities = [
+        [
+          { title: "Eiffel Tower Visit", description: "Visit the iconic landmark of Paris", time: "9:00 AM", type: "sightseeing", location: "Champ de Mars" },
+          { title: "Seine River Cruise", description: "Enjoy a relaxing cruise along the Seine", time: "1:00 PM", type: "tour", location: "Seine River" },
+          { title: "Dinner at Le Jules Verne", description: "Fine dining with Eiffel Tower views", time: "7:30 PM", type: "meal", location: "Eiffel Tower" }
+        ],
+        [
+          { title: "Louvre Museum", description: "Visit one of the world's largest art museums", time: "9:30 AM", type: "museum", location: "Rue de Rivoli" },
+          { title: "Lunch at Café Marly", description: "Dine with a view of the Louvre Pyramid", time: "1:30 PM", type: "meal", location: "Louvre Museum" },
+          { title: "Champs-Élysées shopping", description: "Shop along the famous avenue", time: "3:30 PM", type: "shopping", location: "Champs-Élysées" }
+        ],
+        [
+          { title: "Montmartre & Sacré-Cœur", description: "Explore the artistic neighborhood", time: "10:00 AM", type: "sightseeing", location: "Montmartre" },
+          { title: "Lunch at La Maison Rose", description: "Dine at the famous pink restaurant", time: "1:00 PM", type: "meal", location: "Montmartre" },
+          { title: "Evening at Moulin Rouge", description: "Experience a classic Parisian cabaret", time: "8:00 PM", type: "entertainment", location: "Pigalle" }
+        ]
+      ];
+      bookings = [
+        { type: "hotel", title: "Hôtel Plaza Athénée", provider: "Hotels.com", price: "$350 per night", details: { location: "Avenue Montaigne, 8th arr." } },
+        { type: "activity", title: "Skip-the-line Eiffel Tower Tickets", provider: "GetYourGuide", price: "$45 per person", details: { access: "Second floor with option to Summit" } },
+        { type: "activity", title: "Moulin Rouge Show with Champagne", provider: "Viator", price: "$120 per person", details: { showtime: "9:00 PM" } }
+      ];
+      break;
+      
+    case 'rome':
+    case 'italy':
+      activities = [
+        [
+          { title: "Colosseum Tour", description: "Explore the ancient Roman amphitheater", time: "9:00 AM", type: "sightseeing", location: "Piazza del Colosseo" },
+          { title: "Roman Forum & Palatine Hill", description: "Visit the heart of ancient Rome", time: "1:00 PM", type: "sightseeing", location: "Via della Salara Vecchia" },
+          { title: "Dinner in Trastevere", description: "Authentic Italian dinner in a charming district", time: "7:30 PM", type: "meal", location: "Trastevere" }
+        ],
+        [
+          { title: "Vatican Museums & Sistine Chapel", description: "Explore world-class art and Michelangelo's masterpiece", time: "8:30 AM", type: "museum", location: "Vatican City" },
+          { title: "St. Peter's Basilica", description: "Visit one of the world's largest churches", time: "1:30 PM", type: "sightseeing", location: "St. Peter's Square" },
+          { title: "Trevi Fountain", description: "Visit the famous baroque fountain", time: "5:00 PM", type: "sightseeing", location: "Piazza di Trevi" }
+        ],
+        [
+          { title: "Spanish Steps", description: "Visit the famous stairway", time: "10:00 AM", type: "sightseeing", location: "Piazza di Spagna" },
+          { title: "Shopping on Via Condotti", description: "Luxury shopping experience", time: "11:30 AM", type: "shopping", location: "Via Condotti" },
+          { title: "Evening food tour", description: "Sample Roman cuisine across multiple stops", time: "6:00 PM", type: "food tour", location: "Campo de' Fiori area" }
+        ]
+      ];
+      bookings = [
+        { type: "hotel", title: "Hotel Artemide", provider: "Booking.com", price: "$180 per night", details: { location: "Via Nazionale, near Repubblica Metro" } },
+        { type: "activity", title: "Skip-the-line Colosseum & Roman Forum", provider: "GetYourGuide", price: "$55 per person", details: { duration: "3 hours" } },
+        { type: "activity", title: "Early Access Vatican Tour", provider: "Viator", price: "$65 per person", details: { startTime: "8:00 AM" } }
+      ];
+      break;
+      
+    // Default fallback for any other destination
+    default:
+      activities = Array(numDays).fill(0).map(() => [
+        { title: "Morning exploration", description: `Explore ${trip.destination} attractions`, time: "9:00 AM", type: "sightseeing" },
+        { title: "Lunch at local restaurant", description: "Enjoy local cuisine", time: "1:00 PM", type: "meal" },
+        { title: "Afternoon activities", description: "Visit cultural sites", time: "3:00 PM", type: "sightseeing" }
+      ]);
+      bookings = [
+        { type: "hotel", title: `Accommodation in ${trip.destination}`, provider: "Local Hotel", price: trip.budget || "$150 per night", details: { location: "City center" } },
+        { type: "transportation", title: "Local Transportation Pass", provider: `${trip.destination} Transit`, price: "$25 per person", details: { validity: "3 days" } }
+      ];
+  }
+  
+  // Create the fallback itinerary
+  const result: GeneratedItinerary = {
+    days: activities.slice(0, numDays).map((dayActivities, index) => ({
+      dayNumber: index + 1,
+      title: `Day ${index + 1}: Exploring ${trip.destination}`,
+      activities: dayActivities
+    })),
+    bookings: bookings
+  };
+  
+  // Add dates to the days if trip dates are specified
+  if (trip.startDate) {
+    const startDateObj = new Date(trip.startDate);
+    result.days.forEach((day, index) => {
+      const dayDate = new Date(startDateObj);
+      dayDate.setDate(startDateObj.getDate() + index);
+      day.date = dayDate;
+    });
+  }
+  
+  return result;
 }
