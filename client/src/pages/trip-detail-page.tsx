@@ -193,7 +193,19 @@ export default function TripDetailPage() {
               {hasItinerary ? (
                 <div className="space-y-8">
                   {trip.days.map((day) => (
-                    <ItineraryDay key={day.id} day={day} />
+                    <ItineraryDay 
+                      key={day.id} 
+                      day={day} 
+                      destination={trip.destination}
+                      onAddActivity={(dayId, activity) => {
+                        // Would implement activity addition functionality here
+                        console.log("Adding activity to day", dayId, activity);
+                      }}
+                      onDeleteActivity={(activityId) => {
+                        // Would implement activity deletion functionality here
+                        console.log("Deleting activity", activityId);
+                      }}
+                    />
                   ))}
                 </div>
               ) : (
