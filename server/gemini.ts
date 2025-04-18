@@ -1,5 +1,17 @@
 import { Trip } from "@shared/schema";
 
+// Type for chat messages
+type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+// Type for chatbot response
+type ChatbotResponse = {
+  reply: string;
+  suggestions?: string[];
+};
+
 type TripIdea = {
   summary: string;
   highlights: string[];
@@ -328,6 +340,134 @@ export async function generateItinerary(trip: Trip): Promise<GeneratedItinerary>
   } catch (error) {
     console.error("Error generating itinerary:", error);
     return generateFallbackItinerary(trip);
+  }
+}
+
+// AI-powered chatbot function
+export async function getAIChatResponse(
+  userMessage: string,
+  chatHistory: ChatMessage[] = [],
+  context: {
+    destination?: string;
+    tripDates?: {start?: string; end?: string};
+    preferences?: string[];
+  } = {}
+): Promise<ChatbotResponse> {
+  try {
+    // Check if API key is missing - if so, return a simple fallback response
+    if (!GEMINI_API_KEY) {
+      console.warn("No GEMINI_API_KEY provided. Using fallback chatbot response.");
+      return {
+        reply: "I'm your travel assistant! I can help you plan your trip, find destinations, and answer travel questions. However, I'm operating in offline mode right now. Please try again later when the service is fully available.",
+        suggestions: ["Tell me about popular destinations", "How to plan a budget trip?", "Best time to visit Europe"]
+      };
+    }
+    
+    const historyFormatted = chatHistory.map(msg => ({
+      role: msg.role,
+      parts: [{ text: msg.content }]
+    }));
+    
+    // Build context information
+    let contextInfo = "";
+    if (context.destination) {
+      contextInfo += `User is interested in traveling to: ${context.destination}.\n`;
+    }
+    if (context.tripDates?.start && context.tripDates?.end) {
+      contextInfo += `Their travel dates are from ${context.tripDates.start} to ${context.tripDates.end}.\n`;
+    }
+    if (context.preferences && context.preferences.length > 0) {
+      contextInfo += `Their travel preferences include: ${context.preferences.join(", ")}.\n`;
+    }
+    
+    // Create system message
+    const systemMessage = {
+      role: "system",
+      parts: [{ text: `You are an AI-powered travel companion that helps users plan their trips and answers travel-related questions.
+      
+      ${contextInfo}
+      
+      Keep your responses travel-focused, friendly, and concise (under 150 words when possible).
+      Always provide helpful, accurate travel information.
+      If the user asks about something unrelated to travel, politely redirect them to travel topics.
+      At the end of your response, suggest 2-3 relevant follow-up questions the user might want to ask.
+      
+      Format your response as a JSON object with the following structure:
+      {
+        "reply": "Your helpful response to the user's query",
+        "suggestions": ["Suggested follow-up question 1", "Suggested follow-up question 2", "Suggested follow-up question 3"]
+      }
+      `}]
+    };
+    
+    // Combine everything for the API request
+    let allMessages: any[] = [systemMessage];
+    
+    // Add history if exists
+    if (historyFormatted.length > 0) {
+      allMessages = [...allMessages, ...historyFormatted];
+    }
+    
+    // Add the current user message
+    allMessages.push({
+      role: "user",
+      parts: [{ text: userMessage }]
+    });
+    
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": GEMINI_API_KEY,
+        },
+        body: JSON.stringify({
+          contents: allMessages,
+          generationConfig: {
+            temperature: 0.8,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      console.error(`Gemini API error: ${response.statusText}`);
+      return {
+        reply: "I'm sorry, I encountered an issue processing your request. Could you please try again?",
+        suggestions: ["Tell me about popular destinations", "What should I pack for my trip?", "Best places to visit"]
+      };
+    }
+
+    const data = await response.json();
+    const text = data.candidates[0].content.parts[0].text;
+    
+    // Extract the JSON from the response
+    const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/{[\s\S]*?}/);
+    const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : text;
+    
+    let result: ChatbotResponse;
+    try {
+      result = JSON.parse(jsonString);
+    } catch (e) {
+      console.error("Failed to parse Gemini response as JSON:", e);
+      // If we couldn't parse as JSON, use the raw text as the reply
+      return {
+        reply: text,
+        suggestions: ["Tell me more about this", "What else should I know?", "Any recommendations?"]
+      };
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("Error getting chatbot response:", error);
+    return {
+      reply: "I apologize, but I'm experiencing some technical difficulties. Please try again in a moment.",
+      suggestions: ["Tell me about popular destinations", "How to plan a budget trip?", "Best time to visit Europe"]
+    };
   }
 }
 
