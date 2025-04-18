@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plane, Hotel, Ticket, DollarSign, Check, ExternalLink } from "lucide-react";
+import { Plane, Hotel, Ticket, DollarSign, Check, ExternalLink, Calendar } from "lucide-react";
 
 type BookingCardProps = {
   booking: {
@@ -16,7 +17,34 @@ type BookingCardProps = {
   };
 };
 
+// List of hotel booking providers with their URLs for redirection
+const hotelBookingProviders = [
+  {
+    name: "Booking.com",
+    url: "https://www.booking.com/searchresults.html",
+    searchParams: (query: string) => `?ss=${encodeURIComponent(query)}`
+  },
+  {
+    name: "Hotels.com",
+    url: "https://www.hotels.com/search.do",
+    searchParams: (query: string) => `?q-destination=${encodeURIComponent(query)}`
+  },
+  {
+    name: "Expedia",
+    url: "https://www.expedia.com/Hotel-Search",
+    searchParams: (query: string) => `?destination=${encodeURIComponent(query)}`
+  },
+  {
+    name: "Airbnb",
+    url: "https://www.airbnb.com/s",
+    searchParams: (query: string) => `/${encodeURIComponent(query)}/homes`
+  }
+];
+
 export default function BookingCard({ booking }: BookingCardProps) {
+  const [bookingUrl, setBookingUrl] = useState<string | null>(null);
+  const [showBookingOptions, setShowBookingOptions] = useState(false);
+  
   // Function to get icon based on booking type
   const getBookingIcon = () => {
     switch (booking.type.toLowerCase()) {
@@ -79,6 +107,34 @@ export default function BookingCard({ booking }: BookingCardProps) {
     );
   };
 
+  // Handle booking action based on type
+  const handleBookingAction = () => {
+    const bookingType = booking.type.toLowerCase();
+    
+    if (bookingType === 'hotel' || bookingType === 'accommodation') {
+      setShowBookingOptions(true);
+    } else {
+      // For other booking types, just show details
+      console.log("Viewing details for:", booking.title);
+    }
+  };
+
+  const redirectToBookingProvider = (provider: typeof hotelBookingProviders[0]) => {
+    // Construct search query from booking details
+    let searchQuery = booking.title;
+    
+    // If booking has location details, include those
+    if (booking.details && booking.details.location) {
+      searchQuery = booking.details.location;
+    }
+    
+    // Create the full URL with search parameters
+    const fullUrl = `${provider.url}${provider.searchParams(searchQuery)}`;
+    
+    // Open in a new tab
+    window.open(fullUrl, '_blank');
+  };
+
   return (
     <Card className={`overflow-hidden border ${getBookingColor()} hover:shadow-md transition-all`}>
       <CardContent className="p-4">
@@ -112,13 +168,57 @@ export default function BookingCard({ booking }: BookingCardProps) {
         )}
         
         {formatDetails()}
+        
+        {/* Booking options for hotels */}
+        {showBookingOptions && (booking.type.toLowerCase() === 'hotel' || booking.type.toLowerCase() === 'accommodation') && (
+          <div className="mt-4 border-t pt-3">
+            <p className="text-sm text-gray-600 mb-2">Book this accommodation with:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {hotelBookingProviders.map((provider) => (
+                <Button 
+                  key={provider.name}
+                  variant="outline" 
+                  size="sm"
+                  className="justify-start"
+                  onClick={() => redirectToBookingProvider(provider)}
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                  {provider.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
       
       <CardFooter className="bg-white p-3 border-t flex justify-end">
-        <Button variant="outline" size="sm">
-          <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-          View Details
-        </Button>
+        {!showBookingOptions ? (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleBookingAction}
+          >
+            {booking.type.toLowerCase() === 'hotel' || booking.type.toLowerCase() === 'accommodation' ? (
+              <>
+                <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                Book Now
+              </>
+            ) : (
+              <>
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                View Details
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowBookingOptions(false)}
+          >
+            Hide Options
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
