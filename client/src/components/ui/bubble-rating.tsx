@@ -29,10 +29,10 @@ export function BubbleRating({
     
     if (bubbleValue <= roundedRating) {
       // Full bubble
-      fillClass = 'bg-green-500';
+      fillClass = 'bg-[#3730a3]';
     } else if (bubbleValue - 0.5 === roundedRating) {
       // Half bubble
-      fillClass = 'bg-gradient-to-r from-green-500 to-green-500 bg-[length:50%_100%] bg-no-repeat';
+      fillClass = 'bg-gradient-to-r from-[#3730a3] to-[#3730a3] bg-[length:50%_100%] bg-no-repeat';
     } else {
       // Empty bubble
       fillClass = 'bg-gray-200';
