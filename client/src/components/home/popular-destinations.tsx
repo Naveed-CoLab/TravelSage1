@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRight, ChevronLeft, Heart } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { BubbleRating } from "@/components/ui/bubble-rating";
 import romeImg from "@assets/image_1745004323842.png";
 
 // Import destination images from assets if available
@@ -308,67 +309,63 @@ export default function PopularDestinations() {
           <div className="relative">
             <div 
               ref={hotelsRef}
-              className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide"
+              className="flex gap-4 overflow-hidden pb-4 -mx-2 px-2 relative"
             >
-              {hotelExperiences.map((hotel) => (
-                <div 
-                  key={hotel.id} 
-                  className="relative min-w-[300px] rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0 snap-start cursor-pointer transition-transform duration-300 hover:translate-y-[-4px] hover:shadow-md"
-                  onClick={() => handleItemClick('hotel', hotel)}
-                >
-                  <div className="relative h-44">
-                    <img 
-                      src={hotel.imageUrl}
-                      alt={hotel.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = `https://source.unsplash.com/featured/?restaurant,food`;
-                      }}
-                    />
-                    <button 
-                      className="absolute top-2 right-2 p-2 rounded-full bg-white shadow-sm transition-colors duration-200 hover:bg-gray-100"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleWishlist(hotel.id);
-                      }}
-                    >
-                      <Heart 
-                        className={`h-5 w-5 ${wishlist[hotel.id] ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
+              <div className="flex transition-transform duration-300 ease-in-out" style={{ width: `${hotelExperiences.length * 316}px` }}>
+                {hotelExperiences.map((hotel) => (
+                  <div 
+                    key={hotel.id} 
+                    className="relative w-[300px] h-[300px] mr-4 rounded-xl overflow-hidden bg-white shadow-sm cursor-pointer transition-transform duration-300 hover:translate-y-[-4px] hover:shadow-md"
+                    onClick={() => handleItemClick('hotel', hotel)}
+                  >
+                    <div className="relative h-44">
+                      <img 
+                        src={hotel.imageUrl}
+                        alt={hotel.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = `https://source.unsplash.com/featured/?restaurant,food`;
+                        }}
                       />
-                    </button>
-                    <div className="absolute bottom-2 left-2 bg-green-600 text-white text-xs font-bold rounded px-1.5 py-1">
-                      TripAdvisor
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <div className="flex">
-                      <div className="text-green-700 flex items-center gap-1">
-                        <span className="font-bold">{hotel.rating}</span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <svg key={i} className={`w-3 h-3 ${i < Math.floor(hotel.rating) ? 'text-green-700 fill-current' : 'text-gray-300'}`} viewBox="0 0 20 20">
-                              <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                            </svg>
-                          ))}
-                        </div>
-                        <span className="text-gray-500 text-xs">({hotel.reviewCount})</span>
+                      <button 
+                        className="absolute top-2 right-2 p-2 rounded-full bg-white shadow-sm transition-colors duration-200 hover:bg-gray-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleWishlist(hotel.id);
+                        }}
+                      >
+                        <Heart 
+                          className={`h-5 w-5 ${wishlist[hotel.id] ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
+                        />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-green-600 text-white text-xs font-bold rounded px-1.5 py-1">
+                        TripSage
                       </div>
                     </div>
-                    <h3 className="font-bold text-gray-900 mt-1">{hotel.name}</h3>
-                    <div className="text-gray-500 text-sm">{hotel.priceLevel} • {hotel.categories}</div>
+                    <div className="p-4">
+                      <div className="flex items-center">
+                        <BubbleRating 
+                          rating={hotel.rating} 
+                          reviewCount={hotel.reviewCount}
+                          size="md"
+                        />
+                      </div>
+                      <h3 className="font-bold text-gray-900 mt-1">{hotel.name}</h3>
+                      <div className="text-gray-500 text-sm">{hotel.priceLevel} • {hotel.categories}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
             
             <button 
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10"
               onClick={() => handleScroll('left', hotelsRef)}
             >
               <ChevronLeft className="h-6 w-6 text-gray-600" />
             </button>
             <button 
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10"
               onClick={() => handleScroll('right', hotelsRef)}
             >
               <ChevronRight className="h-6 w-6 text-gray-600" />
@@ -380,75 +377,73 @@ export default function PopularDestinations() {
       {/* Top experiences section */}
       <section className="py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Top experiences on Tripadvisor</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Top experiences on TripSage</h2>
           
           <div className="relative">
             <div 
               ref={experiencesRef}
-              className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide"
+              className="flex gap-4 overflow-hidden pb-4 -mx-2 px-2 relative"
             >
-              {travelExperiences.map((exp) => (
-                <div 
-                  key={exp.id} 
-                  className="relative min-w-[300px] rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0 snap-start cursor-pointer transition-transform duration-300 hover:translate-y-[-4px] hover:shadow-md"
-                  onClick={() => handleItemClick('experience', exp)}
-                >
-                  <div className="relative h-44">
-                    <img 
-                      src={exp.imageUrl}
-                      alt={exp.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = `https://source.unsplash.com/featured/?travel,tour`;
-                      }}
-                    />
-                    <button 
-                      className="absolute top-2 right-2 p-2 rounded-full bg-white shadow-sm transition-colors duration-200 hover:bg-gray-100"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleWishlist(exp.id);
-                      }}
-                    >
-                      <Heart 
-                        className={`h-5 w-5 ${wishlist[exp.id] ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
+              <div className="flex transition-transform duration-300 ease-in-out" style={{ width: `${travelExperiences.length * 316}px` }}>
+                {travelExperiences.map((exp) => (
+                  <div 
+                    key={exp.id} 
+                    className="relative w-[300px] h-[300px] mr-4 rounded-xl overflow-hidden bg-white shadow-sm cursor-pointer transition-transform duration-300 hover:translate-y-[-4px] hover:shadow-md"
+                    onClick={() => handleItemClick('experience', exp)}
+                  >
+                    <div className="relative h-44">
+                      <img 
+                        src={exp.imageUrl}
+                        alt={exp.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = `https://source.unsplash.com/featured/?travel,tour`;
+                        }}
                       />
-                    </button>
-                    <div className="absolute bottom-2 left-2 bg-amber-500 text-black text-xs font-bold rounded-sm px-2 py-1">
-                      {exp.year}
-                    </div>
-                    {exp.badge && (
-                      <div className="absolute top-2 left-2 bg-blue-900 text-white text-xs font-bold px-2 py-1 rounded-sm">
-                        {exp.badge}
+                      <button 
+                        className="absolute top-2 right-2 p-2 rounded-full bg-white shadow-sm transition-colors duration-200 hover:bg-gray-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleWishlist(exp.id);
+                        }}
+                      >
+                        <Heart 
+                          className={`h-5 w-5 ${wishlist[exp.id] ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
+                        />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-amber-500 text-black text-xs font-bold rounded-sm px-2 py-1">
+                        {exp.year}
                       </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-2">{exp.name}</h3>
-                    <div className="flex items-center mb-1">
-                      <span className="font-bold text-sm">{exp.rating}</span>
-                      <div className="flex ml-1">
-                        {[...Array(5)].map((_, i) => (
-                          <svg key={i} className={`w-3 h-3 ${i < Math.floor(exp.rating) ? 'text-green-700 fill-current' : 'text-gray-300'}`} viewBox="0 0 20 20">
-                            <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
-                          </svg>
-                        ))}
-                      </div>
-                      <span className="text-gray-500 text-xs ml-1">({exp.reviewCount})</span>
+                      {exp.badge && (
+                        <div className="absolute top-2 left-2 bg-blue-900 text-white text-xs font-bold px-2 py-1 rounded-sm">
+                          {exp.badge}
+                        </div>
+                      )}
                     </div>
-                    <div className="text-gray-700 text-sm">{exp.price}</div>
+                    <div className="p-4">
+                      <h3 className="font-bold text-gray-900 mb-1 line-clamp-2">{exp.name}</h3>
+                      <div className="flex items-center mb-1">
+                        <BubbleRating 
+                          rating={exp.rating} 
+                          reviewCount={exp.reviewCount}
+                          size="md"
+                        />
+                      </div>
+                      <div className="text-gray-700 text-sm">{exp.price}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
             
             <button 
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10"
               onClick={() => handleScroll('left', experiencesRef)}
             >
               <ChevronLeft className="h-6 w-6 text-gray-600" />
             </button>
             <button 
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10"
               onClick={() => handleScroll('right', experiencesRef)}
             >
               <ChevronRight className="h-6 w-6 text-gray-600" />

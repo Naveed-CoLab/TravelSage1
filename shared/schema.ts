@@ -197,6 +197,38 @@ export const insertAiPromptSchema = createInsertSchema(aiPrompts).omit({
   updatedAt: true,
 });
 
+// Reviews table for user reviews
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  targetType: text("target_type").notNull(), // 'hotel', 'restaurant', 'attraction', 'trip'
+  targetId: text("target_id").notNull(), // Could be an external ID for hotels/restaurants or an internal ID for trips
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  rating: integer("rating").notNull(), // 1-5 rating
+  images: text("images").array(), // Array of image URLs
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at"),
+  isApproved: boolean("is_approved").default(true),
+  helpfulCount: integer("helpful_count").default(0),
+  reportCount: integer("report_count").default(0),
+});
+
+export const insertReviewSchema = createInsertSchema(reviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  helpfulCount: true,
+  reportCount: true,
+});
+
+export const reviewRelations = relations(reviews, ({ one }) => ({
+  user: one(users, {
+    fields: [reviews.userId],
+    references: [users.id],
+  }),
+}));
+
 // Export type declarations for all tables
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -216,3 +248,5 @@ export type AdminLog = typeof adminLogs.$inferSelect;
 export type InsertAdminLog = z.infer<typeof insertAdminLogSchema>;
 export type AiPrompt = typeof aiPrompts.$inferSelect;
 export type InsertAiPrompt = z.infer<typeof insertAiPromptSchema>;
+export type Review = typeof reviews.$inferSelect;
+export type InsertReview = z.infer<typeof insertReviewSchema>;
