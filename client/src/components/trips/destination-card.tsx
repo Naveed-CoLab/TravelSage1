@@ -1,7 +1,7 @@
 
 import { useLocation } from "wouter";
-import { Star, StarHalf } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BubbleRating } from "@/components/ui/bubble-rating";
 
 type DestinationCardProps = {
   destination: {
@@ -19,22 +19,9 @@ type DestinationCardProps = {
 export default function DestinationCard({ destination }: DestinationCardProps) {
   const [, navigate] = useLocation();
 
-  const renderStars = (rating: string) => {
-    const ratingNum = parseFloat(rating);
-    const fullStars = Math.floor(ratingNum);
-    const hasHalfStar = ratingNum % 1 >= 0.5;
-    
-    return (
-      <div className="flex text-yellow-400">
-        {[...Array(fullStars)].map((_, i) => (
-          <Star key={`star-${i}`} className="h-3.5 w-3.5 fill-current" />
-        ))}
-        {hasHalfStar && <StarHalf className="h-3.5 w-3.5 fill-current" />}
-        {[...Array(5 - fullStars - (hasHalfStar ? 1 : 0))].map((_, i) => (
-          <Star key={`empty-star-${i}`} className="h-3.5 w-3.5 text-yellow-400" />
-        ))}
-      </div>
-    );
+  // Convert rating string to number for BubbleRating component
+  const getRatingNumber = (rating: string): number => {
+    return parseFloat(rating);
   };
 
   const handleExplore = (e: React.MouseEvent) => {
@@ -56,13 +43,12 @@ export default function DestinationCard({ destination }: DestinationCardProps) {
         <h3 className="text-lg font-semibold text-gray-900">
           {destination.name}, {destination.country}
         </h3>
-        <div className="flex items-center mt-1 space-x-1">
-          {renderStars(destination.rating)}
-          {destination.reviewCount && (
-            <span className="text-sm text-gray-500">
-              ({destination.reviewCount.toLocaleString()} reviews)
-            </span>
-          )}
+        <div className="flex items-center mt-1">
+          <BubbleRating 
+            rating={getRatingNumber(destination.rating)} 
+            reviewCount={destination.reviewCount}
+            size="sm"
+          />
         </div>
         <p className="mt-2 text-sm text-gray-600 line-clamp-2">
           {destination.description}

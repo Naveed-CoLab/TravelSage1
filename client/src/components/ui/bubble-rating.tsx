@@ -19,59 +19,64 @@ export function BubbleRating({
   className,
   showScore = true
 }: BubbleRatingProps) {
-  const fullCircles = Math.floor(rating);
-  const hasHalfCircle = rating % 1 >= 0.5;
-  const maxRating = 5;
+  // Round to the nearest 0.5
+  const roundedRating = Math.round(rating * 2) / 2;
   
-  // Determine the size class for the bubbles
-  const sizeClass = {
-    sm: 'h-2.5 w-2.5',
-    md: 'h-3.5 w-3.5',
-    lg: 'h-4.5 w-4.5',
-  }[size];
-  
-  // Determine the margin between bubbles
-  const marginClass = {
-    sm: 'mr-0.5',
-    md: 'mr-1',
-    lg: 'mr-1.5',
-  }[size];
-  
-  // Determine text size for rating number and review count
-  const textSizeClass = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
-  }[size];
-  
+  // Generate 5 bubbles
+  const bubbles = Array(5).fill(0).map((_, index) => {
+    const bubbleValue = index + 1;
+    let fillClass = '';
+    
+    if (bubbleValue <= roundedRating) {
+      // Full bubble
+      fillClass = 'bg-green-500';
+    } else if (bubbleValue - 0.5 === roundedRating) {
+      // Half bubble
+      fillClass = 'bg-gradient-to-r from-green-500 to-green-500 bg-[length:50%_100%] bg-no-repeat';
+    } else {
+      // Empty bubble
+      fillClass = 'bg-gray-200';
+    }
+    
+    return (
+      <div
+        key={`bubble-${index}`}
+        className={cn(
+          'rounded-full',
+          fillClass,
+          size === 'sm' ? 'w-2 h-2' : size === 'md' ? 'w-3 h-3' : 'w-4 h-4',
+          'mx-0.5'
+        )}
+      />
+    );
+  });
+
   return (
     <div className={cn('flex items-center', className)}>
-      {showScore && (
-        <span className={cn('font-bold text-green-700 mr-1', textSizeClass)}>
-          {rating.toFixed(1)}
-        </span>
-      )}
-      <div className="flex items-center">
-        {[...Array(maxRating)].map((_, i) => (
-          <div
-            key={i}
-            className={cn(
-              sizeClass,
-              marginClass,
-              'rounded-full',
-              i < fullCircles
-                ? 'bg-green-700' // Full circle
-                : i === fullCircles && hasHalfCircle
-                ? 'bg-gradient-to-r from-green-700 from-50% to-gray-300 to-50%' // Half circle
-                : 'bg-gray-300' // Empty circle
-            )}
-          />
-        ))}
+      <div className="flex mr-1.5">
+        {bubbles}
       </div>
-      {reviewCount !== undefined && (
-        <span className={cn('text-gray-500 ml-1', textSizeClass)}>
-          ({reviewCount.toLocaleString()})
-        </span>
+      {(showScore || reviewCount) && (
+        <div className="text-gray-700 flex items-center space-x-1">
+          {showScore && (
+            <span className={cn(
+              'font-medium',
+              size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'
+            )}>
+              {rating.toFixed(1)}
+            </span>
+          )}
+          {reviewCount !== undefined && (
+            <>
+              <span className={cn(
+                'text-gray-500',
+                size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'
+              )}>
+                ({reviewCount.toLocaleString()})
+              </span>
+            </>
+          )}
+        </div>
       )}
     </div>
   );
