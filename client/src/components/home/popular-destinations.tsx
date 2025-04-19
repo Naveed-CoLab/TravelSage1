@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { createApi } from "unsplash-js";
@@ -7,17 +6,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRight, ChevronLeft, Heart } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { BubbleRating } from "@/components/ui/bubble-rating";
-import romeImg from "@assets/image_1745004323842.png";
 
-// Import destination images from assets if available
-import parisImg from "@assets/paris.jpg";
-import lasVegasImg from "@assets/lasvegas.jpg";
-import reykjavikImg from "@assets/reykjavik.jpg";
-
+// Unsplash API setup
 const unsplash = createApi({
   accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY || 'public-access-key'
 });
 
+// Helper function to get images from Unsplash
 async function getDestinationImage(destination: string, country: string, type?: string) {
   try {
     let query = `${destination} ${country}`;
@@ -128,25 +123,25 @@ export default function PopularDestinations() {
       id: "dest-1",
       name: "Rome",
       country: "Italy",
-      imageUrl: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?rome,italy"
     },
     {
       id: "dest-2",
       name: "Paris",
       country: "France",
-      imageUrl: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?paris,france"
     },
     {
       id: "dest-3",
       name: "Las Vegas",
       country: "NV",
-      imageUrl: "https://images.unsplash.com/photo-1605833556294-ea5c7a74f57d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?lasvegas,nevada"
     },
     {
       id: "dest-4",
       name: "Reykjavik",
       country: "Iceland",
-      imageUrl: "https://images.unsplash.com/photo-1504233529578-6d46baba6d34?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?reykjavik,iceland"
     },
   ];
 
@@ -160,7 +155,7 @@ export default function PopularDestinations() {
       reviewCount: 1365,
       priceLevel: "$$-$$$",
       categories: "Caribbean, Latin, Bar",
-      imageUrl: "https://images.unsplash.com/photo-1590073242678-70ee3fc28f8a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?restaurant,caribbean"
     },
     {
       id: "hotel-2",
@@ -170,7 +165,7 @@ export default function PopularDestinations() {
       reviewCount: 567,
       priceLevel: "$$-$$$",
       categories: "Bar, Seafood, Contemporary",
-      imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?restaurant,cuban"
     },
     {
       id: "hotel-3",
@@ -180,7 +175,7 @@ export default function PopularDestinations() {
       reviewCount: 2413,
       priceLevel: "$$-$$$",
       categories: "American, Bar, Seafood",
-      imageUrl: "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?cafe,beach"
     },
     {
       id: "hotel-4",
@@ -190,7 +185,7 @@ export default function PopularDestinations() {
       reviewCount: 1076,
       priceLevel: "$$-$$$",
       categories: "Latin, Seafood, Vegetarian friendly",
-      imageUrl: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?tacos,restaurant"
     },
   ];
 
@@ -203,7 +198,7 @@ export default function PopularDestinations() {
       reviewCount: 18177,
       price: "from $3 per adult",
       year: "2024",
-      imageUrl: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?porto,tour"
     },
     {
       id: "exp-2",
@@ -212,7 +207,7 @@ export default function PopularDestinations() {
       reviewCount: 12146,
       price: "from $100 per adult",
       year: "2024",
-      imageUrl: "https://images.unsplash.com/photo-1604999333679-b86d54738315?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?bali,ubud"
     },
     {
       id: "exp-3",
@@ -222,7 +217,7 @@ export default function PopularDestinations() {
       price: "from $26 per adult",
       year: "2024",
       badge: "BEST SELLER",
-      imageUrl: "https://images.unsplash.com/photo-1528728329032-2972f65dfb3f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?canal,cruise"
     },
     {
       id: "exp-4",
@@ -231,7 +226,7 @@ export default function PopularDestinations() {
       reviewCount: 9364,
       price: "from $19 per adult",
       year: "2024",
-      imageUrl: "https://images.unsplash.com/photo-1564587432145-5d57a8aaef72?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80"
+      imageUrl: "https://source.unsplash.com/featured/?angkorwat,cambodia"
     },
   ];
 
@@ -245,49 +240,51 @@ export default function PopularDestinations() {
           <div className="relative">
             <div 
               ref={destinationsRef}
-              className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 snap-x scrollbar-hide"
+              className="flex gap-4 overflow-hidden pb-4 -mx-2 px-2 relative"
             >
-              {topDestinations.map((destination) => (
-                <div 
-                  key={destination.id} 
-                  className="relative min-w-[260px] rounded-xl overflow-hidden shadow-sm flex-shrink-0 snap-start group cursor-pointer"
-                  onClick={() => handleItemClick('destination', destination)}
-                >
-                  <img 
-                    src={destination.imageUrl}
-                    alt={`${destination.name}, ${destination.country}`}
-                    className="w-full h-44 object-cover transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => {
-                      e.currentTarget.src = `https://source.unsplash.com/featured/?${encodeURIComponent(destination.name + ' ' + destination.country)}`;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 p-4 text-white">
-                    <h3 className="text-xl font-bold">{destination.name}, {destination.country}</h3>
-                  </div>
-                  <button 
-                    className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white shadow transition-colors duration-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleWishlist(destination.id);
-                    }}
+              <div className="flex transition-transform duration-300 ease-in-out" style={{ width: `${topDestinations.length * 276}px` }}>
+                {topDestinations.map((destination) => (
+                  <div 
+                    key={destination.id} 
+                    className="relative min-w-[260px] rounded-xl overflow-hidden shadow-sm flex-shrink-0 snap-start group cursor-pointer"
+                    onClick={() => handleItemClick('destination', destination)}
                   >
-                    <Heart 
-                      className={`h-4 w-4 ${wishlist[destination.id] ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+                    <img 
+                      src={destination.imageUrl}
+                      alt={`${destination.name}, ${destination.country}`}
+                      className="w-full h-44 object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://source.unsplash.com/featured/?${encodeURIComponent(destination.name + ' ' + destination.country)}`;
+                      }}
                     />
-                  </button>
-                </div>
-              ))}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 p-4 text-white">
+                      <h3 className="text-xl font-bold">{destination.name}, {destination.country}</h3>
+                    </div>
+                    <button 
+                      className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white shadow transition-colors duration-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleWishlist(destination.id);
+                      }}
+                    >
+                      <Heart 
+                        className={`h-4 w-4 ${wishlist[destination.id] ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
             
             <button 
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10"
               onClick={() => handleScroll('left', destinationsRef)}
             >
               <ChevronLeft className="h-6 w-6 text-gray-600" />
             </button>
             <button 
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10 hidden md:block"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md z-10"
               onClick={() => handleScroll('right', destinationsRef)}
             >
               <ChevronRight className="h-6 w-6 text-gray-600" />
@@ -338,7 +335,7 @@ export default function PopularDestinations() {
                           className={`h-5 w-5 ${wishlist[hotel.id] ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
                         />
                       </button>
-                      <div className="absolute bottom-2 left-2 bg-green-600 text-white text-xs font-bold rounded px-1.5 py-1">
+                      <div className="absolute bottom-2 left-2 bg-[#3730a3] text-white text-xs font-bold rounded px-1.5 py-1">
                         TripSage
                       </div>
                     </div>
@@ -415,7 +412,7 @@ export default function PopularDestinations() {
                         {exp.year}
                       </div>
                       {exp.badge && (
-                        <div className="absolute top-2 left-2 bg-blue-900 text-white text-xs font-bold px-2 py-1 rounded-sm">
+                        <div className="absolute top-2 left-2 bg-[#3730a3] text-white text-xs font-bold px-2 py-1 rounded-sm">
                           {exp.badge}
                         </div>
                       )}
@@ -475,23 +472,22 @@ export default function PopularDestinations() {
                 onClick={() => {
                   toast({
                     title: "Travelers' Choice Awards",
-                    description: "Viewing the best destinations and experiences of the year.",
+                    description: "View the 2024 Travelers' Choice Awards winners.",
                   });
                 }}
               >
-                See the winners
+                <span className="mr-2">See the winners</span>
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
             <div className="md:w-1/2 lg:w-3/5 relative">
               <div className="aspect-[16/9] rounded-xl overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1528127269322-539801943592?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-                  alt="Traveler with backpack"
+                  src="https://source.unsplash.com/featured/?travel,award"
+                  alt="Travelers' Choice Awards" 
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-green-500"></div>
-              <div className="absolute -bottom-4 left-10 w-16 h-16 rounded-full bg-amber-400"></div>
             </div>
           </div>
         </div>

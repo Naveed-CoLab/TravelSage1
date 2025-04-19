@@ -30,7 +30,7 @@ export default function HeroSection() {
     setShowResults(false);
   }, [searchCategory]);
 
-  // Mock search function that mimics API call
+  // Search function that mimics API call - now focusing only on hotels, things to do, and restaurants
   const performSearch = async (query: string, category: string) => {
     setIsSearching(true);
     
@@ -41,7 +41,7 @@ export default function HeroSection() {
       
       let mockResults: SearchResult[] = [];
       
-      // Generate different mock results based on category
+      // Generate different mock results based on category - only include hotels, things to do, and restaurants
       if (category === "all" || category === "hotels") {
         mockResults = mockResults.concat([
           {
@@ -50,7 +50,7 @@ export default function HeroSection() {
             location: query,
             rating: 4.7,
             price: "$$$",
-            image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80",
+            image: `https://source.unsplash.com/featured/?hotel,${query}`,
             type: "hotel"
           },
           {
@@ -59,7 +59,7 @@ export default function HeroSection() {
             location: query,
             rating: 4.5,
             price: "$$",
-            image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80",
+            image: `https://source.unsplash.com/featured/?resort,${query}`,
             type: "hotel"
           }
         ]);
@@ -73,7 +73,7 @@ export default function HeroSection() {
             location: query,
             rating: 4.8,
             price: "$$",
-            image: "https://images.unsplash.com/photo-1568849676085-51415703900f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80",
+            image: `https://source.unsplash.com/featured/?tourism,${query}`,
             type: "activity"
           },
           {
@@ -82,7 +82,7 @@ export default function HeroSection() {
             location: query,
             rating: 4.3,
             price: "$",
-            image: "https://images.unsplash.com/photo-1566127992631-137a642a90f4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80",
+            image: `https://source.unsplash.com/featured/?museum,${query}`,
             type: "activity"
           }
         ]);
@@ -96,7 +96,7 @@ export default function HeroSection() {
             location: query,
             rating: 4.6,
             price: "$$$",
-            image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80",
+            image: `https://source.unsplash.com/featured/?restaurant,${query}`,
             type: "restaurant"
           },
           {
@@ -105,48 +105,8 @@ export default function HeroSection() {
             location: query,
             rating: 4.2,
             price: "$",
-            image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80",
+            image: `https://source.unsplash.com/featured/?cafe,${query}`,
             type: "restaurant"
-          }
-        ]);
-      }
-      
-      if (category === "all" || category === "flights") {
-        mockResults = mockResults.concat([
-          {
-            name: `Flight to ${query} - Economy`,
-            description: "Multiple airlines available",
-            price: "From $199",
-            type: "flight"
-          },
-          {
-            name: `Flight to ${query} - Business`,
-            description: "Direct flights available",
-            price: "From $499",
-            type: "flight"
-          }
-        ]);
-      }
-      
-      if (category === "all" || category === "rentals") {
-        mockResults = mockResults.concat([
-          {
-            name: `${query} Beach House`,
-            description: "Beachfront property with amazing views",
-            location: query,
-            rating: 4.9,
-            price: "$$$",
-            image: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80",
-            type: "rental"
-          },
-          {
-            name: `${query} Downtown Apartment`,
-            description: "Central location, modern amenities",
-            location: query,
-            rating: 4.4,
-            price: "$$",
-            image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1080&q=80",
-            type: "rental"
           }
         ]);
       }
@@ -166,17 +126,12 @@ export default function HeroSection() {
     }
   };
 
-  // Handle form submission
+  // Handle form submission - now focused on website content only
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (destination.trim()) {
-      if (searchCategory === "flights") {
-        // Redirect to flights page for flight searches
-        navigate(`/flights?destination=${encodeURIComponent(destination)}`);
-      } else {
-        // Perform search for other categories
-        performSearch(destination, searchCategory);
-      }
+      // Always perform search within the website
+      performSearch(destination, searchCategory);
     }
   };
 
@@ -293,22 +248,7 @@ export default function HeroSection() {
               <Utensils className="h-4 w-4" />
               <span>Restaurants</span>
             </Button>
-            <Button 
-              variant={searchCategory === "flights" ? "default" : "outline"} 
-              className="rounded-full px-4 py-2 flex items-center gap-2 border-gray-200"
-              onClick={() => setSearchCategory("flights")}
-            >
-              <Plane className="h-4 w-4" />
-              <span>Flights</span>
-            </Button>
-            <Button 
-              variant={searchCategory === "rentals" ? "default" : "outline"} 
-              className="rounded-full px-4 py-2 flex items-center gap-2 border-gray-200"
-              onClick={() => setSearchCategory("rentals")}
-            >
-              <Car className="h-4 w-4" />
-              <span>Vacation Rentals</span>
-            </Button>
+
           </div>
           
           {/* Search input */}
