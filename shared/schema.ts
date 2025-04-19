@@ -207,6 +207,7 @@ export const insertAiPromptSchema = createInsertSchema(aiPrompts).omit({
   updatedAt: true,
 });
 
+// Export type declarations for all tables
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Trip = typeof trips.$inferSelect;

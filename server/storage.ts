@@ -19,7 +19,7 @@ import {
   type InsertDestination
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, count } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 
@@ -121,6 +121,40 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updatedUser;
+  }
+  
+  async getUserCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(users);
+    return result[0].count;
+  }
+  
+  async getNewUserCountToday(): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const result = await db
+      .select({ count: count() })
+      .from(users)
+      .where(gte(users.createdAt, today));
+    
+    return result[0].count;
+  }
+  
+  async getTripCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(trips);
+    return result[0].count;
+  }
+  
+  async getNewTripCountToday(): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const result = await db
+      .select({ count: count() })
+      .from(trips)
+      .where(gte(trips.createdAt, today));
+    
+    return result[0].count;
   }
 
   // Trip methods
