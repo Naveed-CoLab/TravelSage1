@@ -11,6 +11,8 @@ export const users = pgTable("users", {
   firstName: text("first_name"),
   lastName: text("last_name"),
   googleId: text("google_id").unique(),
+  role: text("role").default("user").notNull(), // 'user', 'admin', 'moderator'
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -21,6 +23,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   lastName: true,
   googleId: true,
+  role: true,
+  isActive: true,
 });
 
 export const trips = pgTable("trips", {
@@ -154,5 +158,70 @@ export type Activity = typeof activities.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
+// Analytics tables
+export const analytics = pgTable("analytics", {
+  id: serial("id").primaryKey(),
+  eventType: text("event_type").notNull(), // 'login', 'trip_created', 'search', etc.
+  userId: integer("user_id").references(() => users.id),
+  data: json("data"), // Store event-specific data
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAnalyticsSchema = createInsertSchema(analytics).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Admin logs
+export const adminLogs = pgTable("admin_logs", {
+  id: serial("id").primaryKey(),
+  adminId: integer("admin_id").references(() => users.id).notNull(),
+  action: text("action").notNull(), // 'user_blocked', 'destination_added', etc.
+  entityType: text("entity_type"), // 'user', 'trip', 'destination', etc.
+  entityId: integer("entity_id"), // ID of the affected entity
+  details: text("details"), // Additional information
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAdminLogSchema = createInsertSchema(adminLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+// AI prompts for admins to customize
+export const aiPrompts = pgTable("ai_prompts", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  prompt: text("prompt").notNull(),
+  description: text("description"),
+  category: text("category").notNull(), // 'trip_planning', 'destination_info', etc.
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertAiPromptSchema = createInsertSchema(aiPrompts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type Trip = typeof trips.$inferSelect;
+export type InsertTrip = z.infer<typeof insertTripSchema>;
+export type TripDay = typeof tripDays.$inferSelect;
+export type InsertTripDay = z.infer<typeof insertTripDaySchema>;
+export type Activity = typeof activities.$inferSelect;
+export type InsertActivity = z.infer<typeof insertActivitySchema>;
+export type Booking = typeof bookings.$inferSelect;
+export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type Destination = typeof destinations.$inferSelect;
 export type InsertDestination = z.infer<typeof insertDestinationSchema>;
+export type Analytics = typeof analytics.$inferSelect;
+export type InsertAnalytics = z.infer<typeof insertAnalyticsSchema>;
+export type AdminLog = typeof adminLogs.$inferSelect;
+export type InsertAdminLog = z.infer<typeof insertAdminLogSchema>;
+export type AiPrompt = typeof aiPrompts.$inferSelect;
+export type InsertAiPrompt = z.infer<typeof insertAiPromptSchema>;

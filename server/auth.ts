@@ -201,6 +201,93 @@ export function setupAuth(app: Express) {
     
     res.json(userWithoutPassword);
   });
+  
+  // Admin login endpoint
+  app.post("/api/admin/login", (req, res, next) => {
+    passport.authenticate("local", async (err, user, info) => {
+      if (err) return next(err);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Check if user has admin role
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied. You don't have administrator privileges." });
+      }
+      
+      req.login(user, (loginErr) => {
+        if (loginErr) return next(loginErr);
+        
+        // Remove password from the response
+        const { password, ...userWithoutPassword } = user;
+        
+        return res.status(200).json(userWithoutPassword);
+      });
+    })(req, res, next);
+  });
+  
+  // Admin protected routes
+  app.use("/api/admin", (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "You must be logged in" });
+    }
+    
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied. You don't have administrator privileges." });
+    }
+    
+    next();
+  });
+  
+  // Admin stats endpoint
+  app.get("/api/admin/stats/users", async (req, res) => {
+    try {
+      const totalUsers = await storage.getUserCount();
+      const newUsersToday = await storage.getNewUserCountToday();
+      const activeSessions = 1; // This would need a real implementation based on your session store
+      
+      res.json({
+        totalUsers,
+        newUsersToday,
+        activeSessions
+      });
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ message: "Failed to fetch user statistics" });
+    }
+  });
+  
+  app.get("/api/admin/stats/trips", async (req, res) => {
+    try {
+      const totalTrips = await storage.getTripCount();
+      const newTripsToday = await storage.getNewTripCountToday();
+      
+      res.json({
+        totalTrips,
+        newTripsToday
+      });
+    } catch (error) {
+      console.error("Error fetching trip stats:", error);
+      res.status(500).json({ message: "Failed to fetch trip statistics" });
+    }
+  });
+  
+  app.get("/api/admin/stats/destinations", async (req, res) => {
+    try {
+      const destinations = await storage.getAllDestinations();
+      const totalDestinations = destinations.length;
+      // This would need a real implementation based on your trip data
+      const mostPopular = destinations.length > 0 ? `${destinations[0].name}, ${destinations[0].country}` : null;
+      
+      res.json({
+        totalDestinations,
+        mostPopular
+      });
+    } catch (error) {
+      console.error("Error fetching destination stats:", error);
+      res.status(500).json({ message: "Failed to fetch destination statistics" });
+    }
+  });
 
   // Google authentication routes
   app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
