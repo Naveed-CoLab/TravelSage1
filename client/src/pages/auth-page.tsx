@@ -97,6 +97,17 @@ export default function AuthPage() {
                   <TabsTrigger value="register">Sign Up</TabsTrigger>
                 </TabsList>
                 
+                <div className="absolute top-2 right-3">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs text-muted-foreground hover:text-primary"
+                    onClick={() => navigate("/admin/login")}
+                  >
+                    Admin Login
+                  </Button>
+                </div>
+                
                 <TabsContent value="login">
                   <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">

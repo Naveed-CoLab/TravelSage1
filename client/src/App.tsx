@@ -16,6 +16,7 @@ import AdminLoginPage from "@/pages/admin/login-page";
 import DashboardPage from "@/pages/admin/dashboard-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { AdminRoute } from "@/lib/admin-route";
 
 function Router() {
   return (
@@ -31,7 +32,7 @@ function Router() {
       
       {/* Admin routes */}
       <Route path="/admin/login" component={AdminLoginPage} />
-      <Route path="/admin/dashboard" component={DashboardPage} />
+      <AdminRoute path="/admin/dashboard" component={DashboardPage} />
       
       <Route component={NotFound} />
     </Switch>

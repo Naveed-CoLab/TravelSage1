@@ -8,62 +8,39 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Loader2, ShieldAlert } from "lucide-react";
-import { useEffect, useState } from "react";
-import { apiRequest } from "@/lib/queryClient";
-import { toast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
-const loginSchema = z.object({
+const adminLoginSchema = z.object({
   username: z.string().min(3, { message: "Username must be at least 3 characters" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
 
 export default function AdminLoginPage() {
   const [, navigate] = useLocation();
-  const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const { user, loginMutation, isLoading } = useAuth();
   
   // Redirect if user is already logged in and is an admin
   useEffect(() => {
     if (user && user.role === 'admin') {
       navigate("/admin/dashboard");
+    } else if (user && user.role !== 'admin') {
+      // If logged in but not admin, redirect to home
+      navigate("/");
     }
   }, [user, navigate]);
 
-  const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const adminLoginForm = useForm<AdminLoginFormValues>({
+    resolver: zodResolver(adminLoginSchema),
     defaultValues: {
       username: "",
       password: "",
     },
   });
 
-  async function onLoginSubmit(data: LoginFormValues) {
-    setIsLoading(true);
-    try {
-      const res = await apiRequest("POST", "/api/admin/login", data);
-      const userData = await res.json();
-      
-      if (userData.role !== 'admin') {
-        toast({
-          title: "Access Denied",
-          description: "You don't have administrator privileges.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      navigate("/admin/dashboard");
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Invalid credentials or missing admin privileges",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
+  function onAdminLoginSubmit(data: AdminLoginFormValues) {
+    loginMutation.mutate(data);
   }
 
   if (isLoading) {
@@ -76,28 +53,32 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <div className="w-full max-w-md p-4">
-        <Card className="border-t-4 border-t-primary">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center justify-center mb-2">
-              <ShieldAlert className="h-10 w-10 text-primary" />
+      <div className="max-w-md w-full p-4 md:p-6">
+        <div className="mb-8 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="h-16 w-16 bg-red-600 rounded-full flex items-center justify-center">
+              <ShieldAlert className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-2xl text-center">Admin Login</CardTitle>
-            <p className="text-center text-sm text-muted-foreground">
-              Enter your credentials to access the admin dashboard
-            </p>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
+          <p className="mt-2 text-gray-600">Access the administrative dashboard</p>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center text-lg">Admin Authentication</CardTitle>
           </CardHeader>
           <CardContent>
-            <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+            <Form {...adminLoginForm}>
+              <form onSubmit={adminLoginForm.handleSubmit(onAdminLoginSubmit)} className="space-y-4">
                 <FormField
-                  control={loginForm.control}
+                  control={adminLoginForm.control}
                   name="username"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your admin username" {...field} />
+                        <Input placeholder="Enter admin username" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -105,13 +86,13 @@ export default function AdminLoginPage() {
                 />
                 
                 <FormField
-                  control={loginForm.control}
+                  control={adminLoginForm.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Enter your password" {...field} />
+                        <Input type="password" placeholder="Enter admin password" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -121,17 +102,28 @@ export default function AdminLoginPage() {
                 <Button 
                   type="submit" 
                   className="w-full" 
-                  disabled={isLoading}
+                  variant="destructive"
+                  disabled={loginMutation.isPending}
                 >
-                  {isLoading ? (
+                  {loginMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Authenticating...
+                      Signing in...
                     </>
                   ) : (
-                    "Login to Admin Panel"
+                    "Login as Admin"
                   )}
                 </Button>
+                
+                <div className="text-center mt-4">
+                  <Button 
+                    variant="link" 
+                    onClick={() => navigate("/")}
+                    type="button"
+                  >
+                    Return to website
+                  </Button>
+                </div>
               </form>
             </Form>
           </CardContent>
