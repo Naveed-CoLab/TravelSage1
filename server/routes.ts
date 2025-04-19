@@ -481,6 +481,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Review endpoints
+  app.get("/api/reviews/:targetType/:targetId", async (req: Request, res: Response) => {
+    try {
+      const { targetType, targetId } = req.params;
+      
+      if (!targetType || !targetId) {
+        return res.status(400).json({ message: "Target type and ID are required" });
+      }
+      
+      const reviews = await storage.getReviewsByTargetTypeAndId(targetType, targetId);
+      
+      // For each review, fetch the author's username
+      const reviewsWithAuthor = await Promise.all(
+        reviews.map(async (review) => {
+          const user = await storage.getUser(review.userId);
+          return {
+            ...review,
+            authorName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : 'Anonymous',
+          };
+        })
+      );
+      
+      res.json(reviewsWithAuthor);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+  
+  app.post("/api/reviews", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to post a review" });
+      }
+      
+      const userId = req.user!.id;
+      const reviewData = req.body;
+      
+      const review = await storage.createReview({
+        ...reviewData,
+        userId,
+      });
+      
+      res.status(201).json(review);
+    } catch (error) {
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+  
+  app.put("/api/reviews/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to update a review" });
+      }
+      
+      const reviewId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // Check if the review exists and belongs to the user
+      const existingReview = await storage.getReviewById(reviewId);
+      if (!existingReview) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      
+      if (existingReview.userId !== userId) {
+        return res.status(403).json({ message: "You can only edit your own reviews" });
+      }
+      
+      const updatedReview = await storage.updateReview(reviewId, req.body);
+      res.json(updatedReview);
+    } catch (error) {
+      console.error("Error updating review:", error);
+      res.status(500).json({ message: "Failed to update review" });
+    }
+  });
+  
+  app.delete("/api/reviews/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to delete a review" });
+      }
+      
+      const reviewId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // Check if the review exists and belongs to the user
+      const existingReview = await storage.getReviewById(reviewId);
+      if (!existingReview) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      
+      if (existingReview.userId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own reviews" });
+      }
+      
+      await storage.deleteReview(reviewId);
+      res.sendStatus(204);
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      res.status(500).json({ message: "Failed to delete review" });
+    }
+  });
+  
+  app.post("/api/reviews/:id/helpful", async (req: Request, res: Response) => {
+    try {
+      const reviewId = parseInt(req.params.id);
+      
+      const review = await storage.markReviewHelpful(reviewId);
+      res.json(review);
+    } catch (error) {
+      console.error("Error marking review as helpful:", error);
+      res.status(500).json({ message: "Failed to mark review as helpful" });
+    }
+  });
+  
+  app.post("/api/reviews/:id/report", async (req: Request, res: Response) => {
+    try {
+      const reviewId = parseInt(req.params.id);
+      
+      const review = await storage.reportReview(reviewId);
+      res.json(review);
+    } catch (error) {
+      console.error("Error reporting review:", error);
+      res.status(500).json({ message: "Failed to report review" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

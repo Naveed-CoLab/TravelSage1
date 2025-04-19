@@ -5,6 +5,7 @@ import {
   activities, 
   bookings,
   destinations,
+  reviews,
   type User, 
   type InsertUser, 
   type Trip, 
@@ -16,7 +17,9 @@ import {
   type Booking,
   type InsertBooking,
   type Destination,
-  type InsertDestination
+  type InsertDestination,
+  type Review,
+  type InsertReview
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, count } from "drizzle-orm";
@@ -404,7 +407,7 @@ export class DatabaseStorage implements IStorage {
     const [updatedReview] = await db
       .update(reviews)
       .set({
-        helpfulCount: review.helpfulCount + 1,
+        helpfulCount: (review.helpfulCount || 0) + 1,
       })
       .where(eq(reviews.id, id))
       .returning();
@@ -421,7 +424,7 @@ export class DatabaseStorage implements IStorage {
     const [updatedReview] = await db
       .update(reviews)
       .set({
-        reportCount: review.reportCount + 1,
+        reportCount: (review.reportCount || 0) + 1,
       })
       .where(eq(reviews.id, id))
       .returning();
