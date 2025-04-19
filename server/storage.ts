@@ -74,6 +74,15 @@ export interface IStorage {
   getDestinationById(id: number): Promise<Destination | undefined>;
   createDestination(destination: InsertDestination): Promise<Destination>;
 
+  // Review methods
+  getReviewsByTargetTypeAndId(targetType: string, targetId: string): Promise<Review[]>;
+  getReviewById(id: number): Promise<Review | undefined>;
+  createReview(review: InsertReview): Promise<Review>;
+  updateReview(id: number, reviewData: Partial<Review>): Promise<Review>;
+  deleteReview(id: number): Promise<void>;
+  markReviewHelpful(id: number): Promise<Review>;
+  reportReview(id: number): Promise<Review>;
+
   // Session store
   sessionStore: any; // Using any type to bypass the SessionStore type issue
 }
@@ -348,6 +357,76 @@ export class DatabaseStorage implements IStorage {
   async createDestination(destination: InsertDestination): Promise<Destination> {
     const [newDestination] = await db.insert(destinations).values(destination).returning();
     return newDestination;
+  }
+
+  // Review methods
+  async getReviewsByTargetTypeAndId(targetType: string, targetId: string): Promise<Review[]> {
+    return db.select().from(reviews)
+      .where(and(
+        eq(reviews.targetType, targetType),
+        eq(reviews.targetId, targetId)
+      ))
+      .orderBy(desc(reviews.createdAt));
+  }
+
+  async getReviewById(id: number): Promise<Review | undefined> {
+    const [review] = await db.select().from(reviews).where(eq(reviews.id, id));
+    return review;
+  }
+
+  async createReview(review: InsertReview): Promise<Review> {
+    const [newReview] = await db.insert(reviews).values(review).returning();
+    return newReview;
+  }
+
+  async updateReview(id: number, reviewData: Partial<Review>): Promise<Review> {
+    const [updatedReview] = await db
+      .update(reviews)
+      .set({
+        ...reviewData,
+        updatedAt: new Date(),
+      })
+      .where(eq(reviews.id, id))
+      .returning();
+    return updatedReview;
+  }
+
+  async deleteReview(id: number): Promise<void> {
+    await db.delete(reviews).where(eq(reviews.id, id));
+  }
+
+  async markReviewHelpful(id: number): Promise<Review> {
+    const review = await this.getReviewById(id);
+    if (!review) {
+      throw new Error("Review not found");
+    }
+    
+    const [updatedReview] = await db
+      .update(reviews)
+      .set({
+        helpfulCount: review.helpfulCount + 1,
+      })
+      .where(eq(reviews.id, id))
+      .returning();
+    
+    return updatedReview;
+  }
+
+  async reportReview(id: number): Promise<Review> {
+    const review = await this.getReviewById(id);
+    if (!review) {
+      throw new Error("Review not found");
+    }
+    
+    const [updatedReview] = await db
+      .update(reviews)
+      .set({
+        reportCount: review.reportCount + 1,
+      })
+      .where(eq(reviews.id, id))
+      .returning();
+    
+    return updatedReview;
   }
 }
 
