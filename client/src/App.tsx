@@ -9,6 +9,7 @@ import AuthPage from "@/pages/auth-page";
 import TripsPage from "@/pages/trips-page";
 import TripCreatePage from "@/pages/trip-create-page";
 import TripDetailPage from "@/pages/trip-detail-page";
+import DestinationDetailPage from "@/pages/destination-detail-page";
 import ExplorePage from "@/pages/explore-page";
 import ProfilePage from "@/pages/profile-page";
 import FlightsPage from "@/pages/flights-page";
@@ -29,6 +30,7 @@ function Router() {
       <ProtectedRoute path="/trips/:id" component={TripDetailPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/explore" component={ExplorePage} />
+      <Route path="/destinations/:id" component={DestinationDetailPage} />
       <Route path="/flights" component={FlightsPage} />
       <Route path="/flights/search" component={FlightSearchPage} />
       

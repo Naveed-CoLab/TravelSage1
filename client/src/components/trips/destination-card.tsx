@@ -28,6 +28,11 @@ export default function DestinationCard({ destination }: DestinationCardProps) {
     e.preventDefault();
     navigate(`/trips/create?destination=${encodeURIComponent(destination.name)}`);
   };
+  
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(`/destinations/${destination.id}`);
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
@@ -58,13 +63,20 @@ export default function DestinationCard({ destination }: DestinationCardProps) {
             {destination.priceEstimate}
           </p>
         )}
-        <Button
-          onClick={handleExplore}
-          className="mt-4 w-full"
-          variant="default"
-        >
-          Plan Trip
-        </Button>
+        <div className="grid grid-cols-2 gap-2 mt-4">
+          <Button
+            onClick={handleViewDetails}
+            variant="outline"
+          >
+            View Details
+          </Button>
+          <Button
+            onClick={handleExplore}
+            variant="default"
+          >
+            Plan Trip
+          </Button>
+        </div>
       </div>
     </div>
   );
