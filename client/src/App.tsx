@@ -12,6 +12,8 @@ import TripDetailPage from "@/pages/trip-detail-page";
 import ExplorePage from "@/pages/explore-page";
 import ProfilePage from "@/pages/profile-page";
 import FlightsPage from "@/pages/flights-page";
+import AdminLoginPage from "@/pages/admin/login-page";
+import DashboardPage from "@/pages/admin/dashboard-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 
@@ -26,6 +28,11 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/explore" component={ExplorePage} />
       <Route path="/flights" component={FlightsPage} />
+      
+      {/* Admin routes */}
+      <Route path="/admin/login" component={AdminLoginPage} />
+      <Route path="/admin/dashboard" component={DashboardPage} />
+      
       <Route component={NotFound} />
     </Switch>
   );

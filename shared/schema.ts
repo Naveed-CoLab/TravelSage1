@@ -148,16 +148,6 @@ export const insertDestinationSchema = createInsertSchema(destinations).omit({
   createdAt: true,
 });
 
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type Trip = typeof trips.$inferSelect;
-export type InsertTrip = z.infer<typeof insertTripSchema>;
-export type TripDay = typeof tripDays.$inferSelect;
-export type InsertTripDay = z.infer<typeof insertTripDaySchema>;
-export type Activity = typeof activities.$inferSelect;
-export type InsertActivity = z.infer<typeof insertActivitySchema>;
-export type Booking = typeof bookings.$inferSelect;
-export type InsertBooking = z.infer<typeof insertBookingSchema>;
 // Analytics tables
 export const analytics = pgTable("analytics", {
   id: serial("id").primaryKey(),

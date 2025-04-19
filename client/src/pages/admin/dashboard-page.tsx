@@ -44,19 +44,35 @@ export default function DashboardPage() {
     }
   }, [user, navigate]);
 
-  const { data: userStats, isLoading: isLoadingUserStats } = useQuery({
+  interface UserStats {
+    totalUsers: number;
+    newUsersToday: number;
+    activeSessions: number;
+  }
+  
+  interface TripStats {
+    totalTrips: number;
+    newTripsToday: number;
+  }
+  
+  interface DestinationStats {
+    totalDestinations: number;
+    mostPopular: string | null;
+  }
+
+  const { data: userStats, isLoading: isLoadingUserStats } = useQuery<UserStats>({
     queryKey: ["/api/admin/stats/users"],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!user && user.role === "admin",
   });
 
-  const { data: tripStats, isLoading: isLoadingTripStats } = useQuery({
+  const { data: tripStats, isLoading: isLoadingTripStats } = useQuery<TripStats>({
     queryKey: ["/api/admin/stats/trips"],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!user && user.role === "admin",
   });
 
-  const { data: destinationStats, isLoading: isLoadingDestinationStats } = useQuery({
+  const { data: destinationStats, isLoading: isLoadingDestinationStats } = useQuery<DestinationStats>({
     queryKey: ["/api/admin/stats/destinations"],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!user && user.role === "admin",
