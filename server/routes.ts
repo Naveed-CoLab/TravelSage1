@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { generateTripIdea, generateItinerary } from "./gemini";
+import { searchFlights, searchAirports, getAirlineInfo } from "./services/amadeus";
 import { trips, insertTripSchema, insertTripDaySchema, insertActivitySchema, insertBookingSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -253,6 +254,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Flight search APIs using Amadeus
+  app.get("/api/airports/search", async (req: Request, res: Response) => {
+    try {
+      const { keyword } = req.query;
+      
+      if (!keyword || typeof keyword !== 'string' || keyword.length < 2) {
+        return res.status(400).json({ message: "Keyword parameter is required and must be at least 2 characters" });
+      }
+      
+      const airports = await searchAirports(keyword);
+      res.json(airports);
+    } catch (error) {
+      console.error("Error searching airports:", error);
+      res.status(500).json({ message: "Failed to search airports", error: (error as Error).message });
+    }
+  });
+  
+  app.get("/api/airlines/:code", async (req: Request, res: Response) => {
+    try {
+      const { code } = req.params;
+      
+      if (!code) {
+        return res.status(400).json({ message: "Airline code is required" });
+      }
+      
+      const airline = await getAirlineInfo(code);
+      res.json(airline);
+    } catch (error) {
+      console.error("Error getting airline info:", error);
+      res.status(500).json({ message: "Failed to get airline information", error: (error as Error).message });
+    }
+  });
+  
+  app.post("/api/flights/search", async (req: Request, res: Response) => {
+    try {
+      const { 
+        originLocationCode,
+        destinationLocationCode,
+        departureDate,
+        returnDate,
+        adults = 1,
+        children,
+        infants,
+        travelClass,
+        currencyCode,
+        maxPrice,
+        max = 50
+      } = req.body;
+      
+      // Validate required parameters
+      if (!originLocationCode || !destinationLocationCode || !departureDate) {
+        return res.status(400).json({ 
+          message: "Missing required parameters", 
+          required: ["originLocationCode", "destinationLocationCode", "departureDate"] 
+        });
+      }
+      
+      // Validate date format (should be YYYY-MM-DD)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(departureDate) || (returnDate && !dateRegex.test(returnDate))) {
+        return res.status(400).json({ 
+          message: "Invalid date format. Use YYYY-MM-DD format" 
+        });
+      }
+      
+      // Search flights
+      const flightOffers = await searchFlights({
+        originLocationCode,
+        destinationLocationCode,
+        departureDate,
+        returnDate,
+        adults,
+        children,
+        infants,
+        travelClass, 
+        currencyCode,
+        maxPrice,
+        max
+      });
+      
+      res.json(flightOffers);
+    } catch (error) {
+      console.error("Error searching flights:", error);
+      res.status(500).json({ 
+        message: "Failed to search flights", 
+        error: (error as Error).message 
+      });
+    }
+  });
+  
   // AI trip generation routes
   app.post("/api/ai/trip-idea", async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
