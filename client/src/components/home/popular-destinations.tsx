@@ -335,7 +335,7 @@ export default function PopularDestinations() {
                           className={`h-5 w-5 ${wishlist[hotel.id] ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
                         />
                       </button>
-                      <div className="absolute bottom-2 left-2 bg-[#3730a3] text-white text-xs font-bold rounded px-1.5 py-1">
+                      <div className="absolute bottom-2 left-2 bg-[#3264ff] text-white text-xs font-bold rounded px-1.5 py-1">
                         TripSage
                       </div>
                     </div>
@@ -412,7 +412,7 @@ export default function PopularDestinations() {
                         {exp.year}
                       </div>
                       {exp.badge && (
-                        <div className="absolute top-2 left-2 bg-[#3730a3] text-white text-xs font-bold px-2 py-1 rounded-sm">
+                        <div className="absolute top-2 left-2 bg-[#3264ff] text-white text-xs font-bold px-2 py-1 rounded-sm">
                           {exp.badge}
                         </div>
                       )}

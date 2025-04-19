@@ -204,7 +204,7 @@ export default function HeroSection() {
     <section className="relative min-h-[600px] flex items-center justify-center px-4 text-slate-800 overflow-hidden bg-gradient-to-b from-slate-50 to-slate-100 pt-10 pb-16">
       <div className="max-w-6xl mx-auto w-full z-10">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#3730a3] to-[#5046e5] animate-pulse">
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#3264ff] to-[#5884ff] animate-pulse">
             Where to?
           </h1>
           <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
@@ -276,7 +276,7 @@ export default function HeroSection() {
             </div>
             <Button 
               type="submit" 
-              className="py-6 px-8 rounded-full bg-[#3730a3] hover:bg-[#2d2582] text-white flex items-center gap-2"
+              className="py-6 px-8 rounded-full bg-[#3264ff] hover:bg-[#2851cc] text-white flex items-center gap-2"
               disabled={!destination.trim() || isSearching}
             >
               {isSearching ? (
