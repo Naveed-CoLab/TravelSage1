@@ -287,6 +287,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get flight search history for the current user
+  app.get("/api/flights/history", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to view flight search history" });
+      }
+      
+      const userId = req.user!.id;
+      const searchHistory = await storage.getFlightSearchesByUserId(userId);
+      
+      res.json(searchHistory);
+    } catch (error) {
+      console.error("Error fetching flight search history:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch flight search history", 
+        error: (error as Error).message 
+      });
+    }
+  });
+  
+  // Delete a flight search from history
+  app.delete("/api/flights/history/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to delete flight search history" });
+      }
+      
+      const searchId = parseInt(req.params.id);
+      await storage.deleteFlightSearch(searchId);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting flight search:", error);
+      res.status(500).json({ 
+        message: "Failed to delete flight search", 
+        error: (error as Error).message 
+      });
+    }
+  });
+
+  // Search for flights and save the search to history for logged-in users
   app.post("/api/flights/search", async (req: Request, res: Response) => {
     try {
       const { 
@@ -300,6 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         travelClass,
         currencyCode,
         maxPrice,
+        tripType = "ONE_WAY",
         max = 50
       } = req.body;
       
@@ -333,6 +375,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxPrice,
         max
       });
+      
+      // Save search to history if user is logged in
+      if (req.isAuthenticated()) {
+        const userId = req.user!.id;
+        await storage.createFlightSearch({
+          userId,
+          originLocationCode,
+          destinationLocationCode,
+          departureDate,
+          returnDate,
+          adults,
+          children: children || 0,
+          infants: infants || 0,
+          travelClass,
+          tripType,
+          maxPrice,
+          currencyCode
+        });
+      }
       
       res.json(flightOffers);
     } catch (error) {

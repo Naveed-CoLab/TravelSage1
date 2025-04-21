@@ -31,8 +31,8 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/explore" component={ExplorePage} />
       <Route path="/destinations/:id" component={DestinationDetailPage} />
-      <Route path="/flights" component={FlightsPage} />
-      <Route path="/flights/search" component={FlightSearchPage} />
+      <ProtectedRoute path="/flights" component={FlightsPage} />
+      <ProtectedRoute path="/flights/search" component={FlightSearchPage} />
       
       {/* Admin routes */}
       <Route path="/admin/login" component={AdminLoginPage} />
