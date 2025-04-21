@@ -162,37 +162,191 @@ export default function ProfilePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-gray-500" />
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-500">Username</p>
-                      <p className="font-medium">{user.username}</p>
+                {isEditing ? (
+                  <Form {...profileForm}>
+                    <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <FormField
+                          control={profileForm.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>First name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="First name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={profileForm.control}
+                          name="lastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Last name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Last name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <FormField
+                        control={profileForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Your email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setIsEditing(false)}
+                        >
+                          <X className="mr-2 h-4 w-4" /> Cancel
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          disabled={profileUpdateMutation.isPending}
+                        >
+                          {profileUpdateMutation.isPending ? (
+                            <>Saving...</>
+                          ) : (
+                            <>
+                              <Save className="mr-2 h-4 w-4" /> Save changes
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                ) : isChangingPassword ? (
+                  <Form {...passwordForm}>
+                    <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
+                      <Alert className="bg-amber-50 border-amber-200 text-amber-800">
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription>
+                          Changing your password will log you out of all other devices.
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <FormField
+                        control={passwordForm.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Current password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Your current password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={passwordForm.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="New password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={passwordForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm new password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Confirm new password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setIsChangingPassword(false)}
+                        >
+                          <X className="mr-2 h-4 w-4" /> Cancel
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          disabled={passwordUpdateMutation.isPending}
+                        >
+                          {passwordUpdateMutation.isPending ? (
+                            <>Updating...</>
+                          ) : (
+                            <>
+                              <Check className="mr-2 h-4 w-4" /> Update password
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <User className="h-5 w-5 text-gray-500" />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-500">Username</p>
+                        <p className="font-medium">{user.username}</p>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-gray-500" />
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">{user.email}</p>
+                    
+                    <div className="flex items-center gap-3">
+                      <Mail className="h-5 w-5 text-gray-500" />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-500">Email</p>
+                        <p className="font-medium">{user.email}</p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-3">
-                    <Key className="h-5 w-5 text-gray-500" />
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-500">Password</p>
-                      <p className="font-medium">••••••••</p>
+                    <div className="flex items-center gap-3">
+                      <Key className="h-5 w-5 text-gray-500" />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-500">Password</p>
+                        <p className="font-medium">••••••••</p>
+                        <Button 
+                          variant="link" 
+                          className="px-0 h-auto text-xs" 
+                          onClick={() => setIsChangingPassword(true)}
+                        >
+                          Change password
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 flex justify-end">
+                      <Button variant="outline" onClick={() => setIsEditing(true)}>
+                        Edit Profile
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="pt-4 flex justify-end">
-                    <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
-                      Edit Profile
-                    </Button>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
