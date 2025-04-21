@@ -242,11 +242,11 @@ export default function PopularDestinations() {
               ref={destinationsRef}
               className="flex gap-4 overflow-hidden pb-4 -mx-2 px-2 relative"
             >
-              <div className="flex transition-transform duration-300 ease-in-out" style={{ width: `${topDestinations.length * 276}px` }}>
+              <div className="flex transition-transform duration-300 ease-in-out gap-4" style={{ width: `${topDestinations.length * 300}px` }}>
                 {topDestinations.map((destination) => (
                   <div 
                     key={destination.id} 
-                    className="relative min-w-[260px] rounded-xl overflow-hidden shadow-sm flex-shrink-0 snap-start group cursor-pointer"
+                    className="relative min-w-[280px] rounded-xl overflow-hidden shadow-sm flex-shrink-0 snap-start group cursor-pointer"
                     onClick={() => handleItemClick('destination', destination)}
                   >
                     <img 
@@ -308,11 +308,11 @@ export default function PopularDestinations() {
               ref={hotelsRef}
               className="flex gap-4 overflow-hidden pb-4 -mx-2 px-2 relative"
             >
-              <div className="flex transition-transform duration-300 ease-in-out" style={{ width: `${hotelExperiences.length * 316}px` }}>
+              <div className="flex transition-transform duration-300 ease-in-out gap-6" style={{ width: `${hotelExperiences.length * 320}px` }}>
                 {hotelExperiences.map((hotel) => (
                   <div 
                     key={hotel.id} 
-                    className="relative w-[300px] h-[300px] mr-4 rounded-xl overflow-hidden bg-white shadow-sm cursor-pointer transition-transform duration-300 hover:translate-y-[-4px] hover:shadow-md"
+                    className="relative w-[300px] h-[300px] rounded-xl overflow-hidden bg-white shadow-sm cursor-pointer transition-transform duration-300 hover:translate-y-[-4px] hover:shadow-md"
                     onClick={() => handleItemClick('hotel', hotel)}
                   >
                     <div className="relative h-44">
@@ -381,11 +381,11 @@ export default function PopularDestinations() {
               ref={experiencesRef}
               className="flex gap-4 overflow-hidden pb-4 -mx-2 px-2 relative"
             >
-              <div className="flex transition-transform duration-300 ease-in-out" style={{ width: `${travelExperiences.length * 316}px` }}>
+              <div className="flex transition-transform duration-300 ease-in-out gap-6" style={{ width: `${travelExperiences.length * 320}px` }}>
                 {travelExperiences.map((exp) => (
                   <div 
                     key={exp.id} 
-                    className="relative w-[300px] h-[300px] mr-4 rounded-xl overflow-hidden bg-white shadow-sm cursor-pointer transition-transform duration-300 hover:translate-y-[-4px] hover:shadow-md"
+                    className="relative w-[300px] h-[300px] rounded-xl overflow-hidden bg-white shadow-sm cursor-pointer transition-transform duration-300 hover:translate-y-[-4px] hover:shadow-md"
                     onClick={() => handleItemClick('experience', exp)}
                   >
                     <div className="relative h-44">
@@ -483,9 +483,12 @@ export default function PopularDestinations() {
             <div className="md:w-1/2 lg:w-3/5 relative">
               <div className="aspect-[16/9] rounded-xl overflow-hidden">
                 <img 
-                  src="https://source.unsplash.com/featured/?travel,award"
+                  src="https://images.unsplash.com/photo-1503220317375-aaad61436b1b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
                   alt="Travelers' Choice Awards" 
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = `https://source.unsplash.com/featured/?travel,luxury`;
+                  }}
                 />
               </div>
             </div>
