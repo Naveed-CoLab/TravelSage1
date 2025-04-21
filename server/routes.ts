@@ -4,8 +4,34 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { generateTripIdea, generateItinerary } from "./gemini";
 import { searchFlights, searchAirports, getAirlineInfo } from "./services/amadeus";
-import { trips, insertTripSchema, insertTripDaySchema, insertActivitySchema, insertBookingSchema } from "@shared/schema";
+import { 
+  trips, 
+  insertTripSchema, 
+  insertTripDaySchema, 
+  insertActivitySchema, 
+  insertBookingSchema,
+  insertReviewSchema,
+  insertUserSettingsSchema
+} from "@shared/schema";
 import { z } from "zod";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+// Crypto helpers for password hashing and comparison
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePasswords(supplied: string, stored: string) {
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
