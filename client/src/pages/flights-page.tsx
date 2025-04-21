@@ -18,9 +18,12 @@ import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
   CalendarIcon,
   Search,
@@ -44,7 +47,9 @@ import {
   Sparkles,
   ShieldCheck,
   Clock12,
-  ArrowUpRight
+  ArrowUpRight,
+  History,
+  Trash2
 } from "lucide-react";
 
 // Flight types
@@ -75,6 +80,24 @@ type Flight = {
   stops: number;
   cabinClass: string;
   seatsAvailable: number;
+};
+
+// Flight search history type
+type FlightSearch = {
+  id: number;
+  userId: number;
+  originLocationCode: string;
+  destinationLocationCode: string;
+  departureDate: string;
+  returnDate?: string;
+  adults: number;
+  children?: number;
+  infants?: number;
+  travelClass?: string;
+  tripType: string;
+  maxPrice?: number;
+  currencyCode?: string;
+  createdAt: string;
 };
 
 // Mock data
@@ -215,6 +238,7 @@ function generateMockFlights(
 export default function FlightsPage() {
   const [, setLocation] = useLocation();
   const [searchParams, setSearchParams] = useState(new URLSearchParams(window.location.search));
+  const { user } = useAuth();
   
   // Form state
   const [origin, setOrigin] = useState<string>(searchParams.get('from') || searchParams.get('destination') || '');
@@ -237,6 +261,43 @@ export default function FlightsPage() {
   const [priceFilter, setPriceFilter] = useState<[number, number]>([0, 2000]);
   const [airlineFilter, setAirlineFilter] = useState<string[]>([]);
   const [stopsFilter, setStopsFilter] = useState<number[]>([]);
+  
+  // Search history query
+  const { 
+    data: searchHistory,
+    isLoading: isLoadingHistory,
+    refetch: refetchHistory 
+  } = useQuery({
+    queryKey: ['/api/flights/history'],
+    queryFn: async () => {
+      const response = await fetch('/api/flights/history');
+      if (!response.ok) {
+        throw new Error('Failed to fetch flight search history');
+      }
+      return response.json() as Promise<FlightSearch[]>;
+    },
+  });
+  
+  // Delete search history mutation
+  const deleteSearchMutation = useMutation({
+    mutationFn: async (searchId: number) => {
+      await apiRequest('DELETE', `/api/flights/history/${searchId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Search removed",
+        description: "The search has been removed from your history",
+      });
+      refetchHistory();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to remove search",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
   
   // Set initial dates
   useEffect(() => {
@@ -265,10 +326,11 @@ export default function FlightsPage() {
     setIsSearching(true);
     
     try {
-      // In a real app, this would be an API call
-      // For now, we'll simulate a response with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // In a real application, this would call a flight search API
+      // For now, we'll make a request to our backend to save the search
+      // and use mock data for the results
       
+      // First, generate mock flight results
       const outboundFlights = generateMockFlights(
         origin,
         destination,
@@ -290,6 +352,30 @@ export default function FlightsPage() {
         setReturnFlights(inboundFlights);
       } else {
         setReturnFlights([]);
+      }
+      
+      // If user is logged in, save the search to history
+      if (user) {
+        try {
+          // Save search to history via API
+          const searchData = {
+            originLocationCode: origin,
+            destinationLocationCode: destination,
+            departureDate: departDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
+            returnDate: returnDate ? returnDate.toISOString().split('T')[0] : undefined,
+            adults: parseInt(passengers),
+            travelClass: cabinClass.toUpperCase(),
+            tripType: tripType === "oneway" ? "ONE_WAY" : "ROUND_TRIP"
+          };
+          
+          await apiRequest('POST', '/api/flights/search', searchData);
+          
+          // Refresh the search history
+          refetchHistory();
+        } catch (historyError) {
+          console.error("Error saving search history:", historyError);
+          // Continue with flight display even if history saving fails
+        }
       }
       
       setShowResults(true);
@@ -352,6 +438,53 @@ export default function FlightsPage() {
       });
     }, 2000);
   };
+  
+  // Apply search from history
+  const applySearchFromHistory = (search: FlightSearch) => {
+    setOrigin(search.originLocationCode);
+    setDestination(search.destinationLocationCode);
+    
+    // Set depart date
+    if (search.departureDate) {
+      setDepartDate(new Date(search.departureDate));
+    }
+    
+    // Set return date if available
+    if (search.returnDate) {
+      setReturnDate(new Date(search.returnDate));
+    } else {
+      setReturnDate(null);
+    }
+    
+    // Set trip type
+    if (search.tripType) {
+      const tripTypeValue = search.tripType === "ONE_WAY" ? "oneway" : "roundtrip";
+      setTripType(tripTypeValue);
+    }
+    
+    // Set passengers
+    if (search.adults) {
+      setPassengers(search.adults.toString());
+    }
+    
+    // Set cabin class if available
+    if (search.travelClass) {
+      setCabinClass(search.travelClass);
+    }
+    
+    // Scroll to search form
+    document.querySelector('.search-form')?.scrollIntoView({ behavior: 'smooth' });
+    
+    toast({
+      title: "Search loaded",
+      description: "Your previous search has been loaded. Click 'Search Flights' to proceed.",
+    });
+  };
+  
+  // Delete search from history
+  const deleteSearchFromHistory = (searchId: number) => {
+    deleteSearchMutation.mutate(searchId);
+  };
 
   return (
     <MainLayout>
@@ -392,8 +525,85 @@ export default function FlightsPage() {
           </div>
         </div>
         
+        {/* Recent Searches */}
+        {user && searchHistory && searchHistory.length > 0 && (
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-20 mb-4 relative z-10">
+            <Card className="shadow-lg border-0 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <History className="h-5 w-5 mr-2 text-blue-600" />
+                  Recent Searches
+                </CardTitle>
+                <CardDescription>
+                  Click on a search to reload it or delete it from your history
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4 overflow-x-auto pb-2">
+                  {searchHistory.map((search) => (
+                    <Card key={search.id} className="min-w-[260px] max-w-[340px] flex-shrink-0 shadow bg-white">
+                      <CardHeader className="p-4 pb-2">
+                        <CardTitle className="text-base flex justify-between items-center">
+                          <span className="truncate">
+                            {search.originLocationCode} → {search.destinationLocationCode}
+                          </span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 rounded-full text-gray-400 hover:text-red-600 -mr-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteSearchFromHistory(search.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          {new Date(search.createdAt).toLocaleDateString()}
+                          {search.tripType === "ONE_WAY" ? " • One Way" : " • Round Trip"}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-2 text-sm">
+                        <div className="flex justify-between text-gray-500 text-xs">
+                          <span>
+                            <Calendar className="h-3 w-3 inline mr-1" />
+                            {new Date(search.departureDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                            {search.returnDate && ` - ${new Date(search.returnDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}`}
+                          </span>
+                          <span>
+                            <User className="h-3 w-3 inline mr-1" />
+                            {search.adults} {search.adults === 1 ? 'adult' : 'adults'}
+                            {search.children ? `, ${search.children} children` : ''}
+                          </span>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="p-4 pt-0">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
+                          onClick={() => applySearchFromHistory(search)}
+                        >
+                          Apply this search
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        
         {/* Search Form Card */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-20 mb-6 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-14 mb-6 relative z-10 search-form">
           <Card className="shadow-xl border-0">
             <CardContent className="p-6">
               <Tabs defaultValue={tripType} onValueChange={setTripType} className="w-full">
