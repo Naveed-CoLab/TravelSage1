@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, jsonb, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -302,6 +302,35 @@ export const userSettingsRelations = relations(userSettings, ({ one }) => ({
   }),
 }));
 
+// Wishlist items table
+export const wishlistItems = pgTable("wishlist_items", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  itemType: text("item_type").notNull(), // e.g., "destination", "hotel", "experience", "trip"
+  itemId: text("item_id").notNull(), // ID of the saved item
+  itemName: text("item_name").notNull(), // Name of the saved item
+  itemImage: text("item_image"), // Image URL of the saved item
+  additionalData: jsonb("additional_data"), // Any additional data about the item
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertWishlistItemSchema = createInsertSchema(wishlistItems).omit({
+  id: true, 
+  createdAt: true,
+});
+
+export const wishlistItemRelations = relations(wishlistItems, ({ one }) => ({
+  user: one(users, {
+    fields: [wishlistItems.userId],
+    references: [users.id],
+  }),
+}));
+
+// Update user relations to include wishlist items
+export const userWishlistRelation = relations(users, ({ many }) => ({
+  wishlistItems: many(wishlistItems),
+}));
+
 // Export type declarations for all tables
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -327,3 +356,5 @@ export type FlightSearch = typeof flightSearches.$inferSelect;
 export type InsertFlightSearch = z.infer<typeof insertFlightSearchSchema>;
 export type UserSettings = typeof userSettings.$inferSelect;
 export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;
+export type WishlistItem = typeof wishlistItems.$inferSelect;
+export type InsertWishlistItem = z.infer<typeof insertWishlistItemSchema>;

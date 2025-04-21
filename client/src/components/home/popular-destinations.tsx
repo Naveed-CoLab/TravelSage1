@@ -189,7 +189,7 @@ export default function PopularDestinations() {
     },
   ];
 
-  // Travel experiences based on design
+  // Travel experiences based on design with high-quality images
   const travelExperiences = [
     {
       id: "exp-1",
@@ -198,7 +198,7 @@ export default function PopularDestinations() {
       reviewCount: 18177,
       price: "from $3 per adult",
       year: "2024",
-      imageUrl: "https://images.unsplash.com/photo-1559851205-6decd284ec7d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
+      imageUrl: "https://images.unsplash.com/photo-1539635278303-d4002c07eae3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
     },
     {
       id: "exp-2",
@@ -207,7 +207,7 @@ export default function PopularDestinations() {
       reviewCount: 12146,
       price: "from $100 per adult",
       year: "2024",
-      imageUrl: "https://images.unsplash.com/photo-1573790387438-4da905039392?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1025&q=80"
+      imageUrl: "https://images.unsplash.com/photo-1476158085676-e67f57ed9ed7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1472&q=80"
     },
     {
       id: "exp-3",
@@ -217,7 +217,7 @@ export default function PopularDestinations() {
       price: "from $26 per adult",
       year: "2024",
       badge: "BEST SELLER",
-      imageUrl: "https://images.unsplash.com/photo-1558534169-6976b8d63134?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1374&q=80"
+      imageUrl: "https://images.unsplash.com/photo-1499678329028-101435549a4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
     },
     {
       id: "exp-4",
@@ -226,7 +226,17 @@ export default function PopularDestinations() {
       reviewCount: 9364,
       price: "from $19 per adult",
       year: "2024",
-      imageUrl: "https://images.unsplash.com/photo-1532569345715-17ce1a5435d4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
+      imageUrl: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
+    },
+    {
+      id: "exp-5",
+      name: "AI Trip Planning Assistant",
+      rating: 4.9,
+      reviewCount: 8723,
+      price: "Free",
+      year: "2024",
+      badge: "NEW",
+      imageUrl: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
     },
   ];
 
