@@ -299,7 +299,7 @@ export default function FlightsPage() {
     },
   });
   
-  // Set initial dates
+  // Set initial dates and handle reapplied searches
   useEffect(() => {
     const today = new Date();
     const tomorrow = new Date(today);
@@ -308,8 +308,32 @@ export default function FlightsPage() {
     const nextWeek = new Date(today);
     nextWeek.setDate(nextWeek.getDate() + 7);
     
-    setDepartDate(tomorrow);
-    setReturnDate(nextWeek);
+    // Check for reapply search from profile
+    const reapplySearch = sessionStorage.getItem('reapplySearch');
+    if (reapplySearch) {
+      try {
+        const search = JSON.parse(reapplySearch);
+        applySearchFromHistory(search);
+        // Remove from session storage after using it
+        sessionStorage.removeItem('reapplySearch');
+        
+        // Show a confirmation toast
+        toast({
+          title: "Search loaded",
+          description: "Your previous search has been loaded from your history",
+          className: "bg-blue-50 border-blue-100 text-blue-600",
+        });
+      } catch (error) {
+        console.error('Error parsing reapplied search:', error);
+        // Fall back to default dates if there's an error
+        setDepartDate(tomorrow);
+        setReturnDate(nextWeek);
+      }
+    } else {
+      // Set default dates if no reapplied search
+      setDepartDate(tomorrow);
+      setReturnDate(nextWeek);
+    }
   }, []);
   
   // Search function
