@@ -474,6 +474,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Wishlist routes
+  app.get("/api/wishlist", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to view your wishlist" });
+      }
+      
+      const userId = req.user!.id;
+      const wishlistItems = await storage.getWishlistItemsByUserId(userId);
+      
+      res.json(wishlistItems);
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch wishlist items", 
+        error: (error as Error).message 
+      });
+    }
+  });
+  
+  app.post("/api/wishlist", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to add items to your wishlist" });
+      }
+      
+      const userId = req.user!.id;
+      const { itemType, itemId, itemName, itemImage, additionalData } = req.body;
+      
+      // Check if this item is already in the user's wishlist
+      const existingItem = await storage.getWishlistItemByTypeAndId(userId, itemType, itemId);
+      
+      if (existingItem) {
+        return res.status(200).json(existingItem); // Item already exists, return it
+      }
+      
+      // Create a new wishlist item
+      const newItem = await storage.createWishlistItem({
+        userId,
+        itemType,
+        itemId,
+        itemName,
+        itemImage,
+        additionalData
+      });
+      
+      res.status(201).json(newItem);
+    } catch (error) {
+      console.error("Error adding item to wishlist:", error);
+      res.status(500).json({ 
+        message: "Failed to add item to wishlist", 
+        error: (error as Error).message 
+      });
+    }
+  });
+  
+  app.delete("/api/wishlist/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to remove items from your wishlist" });
+      }
+      
+      const userId = req.user!.id;
+      const itemId = parseInt(req.params.id);
+      
+      // Get the wishlist item to verify ownership
+      const item = await storage.getWishlistItemById(itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Wishlist item not found" });
+      }
+      
+      if (item.userId !== userId) {
+        return res.status(403).json({ message: "You do not have permission to delete this wishlist item" });
+      }
+      
+      await storage.deleteWishlistItem(itemId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing item from wishlist:", error);
+      res.status(500).json({ 
+        message: "Failed to remove item from wishlist", 
+        error: (error as Error).message 
+      });
+    }
+  });
 
   // Search for flights and save the search to history for logged-in users
   app.post("/api/flights/search", async (req: Request, res: Response) => {

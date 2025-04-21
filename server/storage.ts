@@ -8,6 +8,7 @@ import {
   reviews,
   flightSearches,
   userSettings,
+  wishlistItems,
   type User, 
   type InsertUser, 
   type Trip, 
@@ -25,7 +26,9 @@ import {
   type FlightSearch,
   type InsertFlightSearch,
   type UserSettings,
-  type InsertUserSettings
+  type InsertUserSettings,
+  type WishlistItem,
+  type InsertWishlistItem
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, count } from "drizzle-orm";
@@ -105,6 +108,13 @@ export interface IStorage {
   getFlightSearchesByUserId(userId: number): Promise<FlightSearch[]>;
   createFlightSearch(flightSearch: InsertFlightSearch): Promise<FlightSearch>;
   deleteFlightSearch(id: number): Promise<void>;
+  
+  // Wishlist methods
+  getWishlistItemsByUserId(userId: number): Promise<WishlistItem[]>;
+  getWishlistItemById(id: number): Promise<WishlistItem | undefined>;
+  createWishlistItem(item: InsertWishlistItem): Promise<WishlistItem>;
+  deleteWishlistItem(id: number): Promise<void>;
+  getWishlistItemByTypeAndId(userId: number, itemType: string, itemId: string): Promise<WishlistItem | undefined>;
 
   // Session store
   sessionStore: any; // Using any type to bypass the SessionStore type issue
@@ -531,6 +541,43 @@ export class DatabaseStorage implements IStorage {
   
   async deleteFlightSearch(id: number): Promise<void> {
     await db.delete(flightSearches).where(eq(flightSearches.id, id));
+  }
+  
+  // Wishlist methods
+  async getWishlistItemsByUserId(userId: number): Promise<WishlistItem[]> {
+    return db
+      .select()
+      .from(wishlistItems)
+      .where(eq(wishlistItems.userId, userId))
+      .orderBy(desc(wishlistItems.createdAt));
+  }
+  
+  async getWishlistItemById(id: number): Promise<WishlistItem | undefined> {
+    const [item] = await db.select().from(wishlistItems).where(eq(wishlistItems.id, id));
+    return item;
+  }
+  
+  async createWishlistItem(item: InsertWishlistItem): Promise<WishlistItem> {
+    const [newItem] = await db.insert(wishlistItems).values(item).returning();
+    return newItem;
+  }
+  
+  async deleteWishlistItem(id: number): Promise<void> {
+    await db.delete(wishlistItems).where(eq(wishlistItems.id, id));
+  }
+  
+  async getWishlistItemByTypeAndId(userId: number, itemType: string, itemId: string): Promise<WishlistItem | undefined> {
+    const [item] = await db
+      .select()
+      .from(wishlistItems)
+      .where(
+        and(
+          eq(wishlistItems.userId, userId),
+          eq(wishlistItems.itemType, itemType),
+          eq(wishlistItems.itemId, itemId)
+        )
+      );
+    return item;
   }
 }
 
