@@ -117,35 +117,35 @@ export default function PopularDestinations() {
     }
   };
 
-  // Use these predefined destinations to match the design
+  // Use these predefined destinations with real images
   const topDestinations = [
     {
       id: "dest-1",
       name: "Rome",
       country: "Italy",
-      imageUrl: "https://source.unsplash.com/featured/?rome,italy"
+      imageUrl: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1592&q=80"
     },
     {
       id: "dest-2",
       name: "Paris",
       country: "France",
-      imageUrl: "https://source.unsplash.com/featured/?paris,france"
+      imageUrl: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1473&q=80"
     },
     {
       id: "dest-3",
       name: "Las Vegas",
       country: "NV",
-      imageUrl: "https://source.unsplash.com/featured/?lasvegas,nevada"
+      imageUrl: "https://images.unsplash.com/photo-1605833556294-ea5c7a74f57d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1474&q=80"
     },
     {
       id: "dest-4",
       name: "Reykjavik",
       country: "Iceland",
-      imageUrl: "https://source.unsplash.com/featured/?reykjavik,iceland"
+      imageUrl: "https://images.unsplash.com/photo-1504284769763-78de535471fd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
     },
   ];
 
-  // Hotel experience cards based on design
+  // Restaurant experience cards based on design
   const hotelExperiences = [
     {
       id: "hotel-1",
@@ -155,7 +155,7 @@ export default function PopularDestinations() {
       reviewCount: 1365,
       priceLevel: "$$-$$$",
       categories: "Caribbean, Latin, Bar",
-      imageUrl: "https://source.unsplash.com/featured/?restaurant,caribbean"
+      imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
     },
     {
       id: "hotel-2",
@@ -165,7 +165,7 @@ export default function PopularDestinations() {
       reviewCount: 567,
       priceLevel: "$$-$$$",
       categories: "Bar, Seafood, Contemporary",
-      imageUrl: "https://source.unsplash.com/featured/?restaurant,cuban"
+      imageUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1374&q=80"
     },
     {
       id: "hotel-3",
@@ -175,7 +175,7 @@ export default function PopularDestinations() {
       reviewCount: 2413,
       priceLevel: "$$-$$$",
       categories: "American, Bar, Seafood",
-      imageUrl: "https://source.unsplash.com/featured/?cafe,beach"
+      imageUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1447&q=80"
     },
     {
       id: "hotel-4",
@@ -185,7 +185,7 @@ export default function PopularDestinations() {
       reviewCount: 1076,
       priceLevel: "$$-$$$",
       categories: "Latin, Seafood, Vegetarian friendly",
-      imageUrl: "https://source.unsplash.com/featured/?tacos,restaurant"
+      imageUrl: "https://images.unsplash.com/photo-1565299507177-b0ac66763828?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1422&q=80"
     },
   ];
 
@@ -198,7 +198,7 @@ export default function PopularDestinations() {
       reviewCount: 18177,
       price: "from $3 per adult",
       year: "2024",
-      imageUrl: "https://source.unsplash.com/featured/?porto,tour"
+      imageUrl: "https://images.unsplash.com/photo-1559851205-6decd284ec7d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
     },
     {
       id: "exp-2",
@@ -207,7 +207,7 @@ export default function PopularDestinations() {
       reviewCount: 12146,
       price: "from $100 per adult",
       year: "2024",
-      imageUrl: "https://source.unsplash.com/featured/?bali,ubud"
+      imageUrl: "https://images.unsplash.com/photo-1573790387438-4da905039392?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1025&q=80"
     },
     {
       id: "exp-3",
@@ -217,7 +217,7 @@ export default function PopularDestinations() {
       price: "from $26 per adult",
       year: "2024",
       badge: "BEST SELLER",
-      imageUrl: "https://source.unsplash.com/featured/?canal,cruise"
+      imageUrl: "https://images.unsplash.com/photo-1558534169-6976b8d63134?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1374&q=80"
     },
     {
       id: "exp-4",
@@ -226,7 +226,7 @@ export default function PopularDestinations() {
       reviewCount: 9364,
       price: "from $19 per adult",
       year: "2024",
-      imageUrl: "https://source.unsplash.com/featured/?angkorwat,cambodia"
+      imageUrl: "https://images.unsplash.com/photo-1532569345715-17ce1a5435d4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
     },
   ];
 
