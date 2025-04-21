@@ -9,7 +9,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "../components/empty-state";
 
 type WishlistItem = {
   id: number;
@@ -30,7 +30,7 @@ export default function WishlistPage() {
   const [activeTab, setActiveTab] = useState("all");
 
   // Fetch wishlist items
-  const { data: wishlistItems, isLoading } = useQuery({
+  const { data: wishlistItems, isLoading } = useQuery<WishlistItem[]>({
     queryKey: ["/api/wishlist"],
     enabled: !!user,
   });
@@ -57,7 +57,7 @@ export default function WishlistPage() {
   });
 
   // Filter wishlist items based on search query and active tab
-  const filteredItems = wishlistItems?.filter((item: WishlistItem) => {
+  const filteredItems = wishlistItems ? wishlistItems.filter((item: WishlistItem) => {
     const matchesSearch = !searchQuery || 
       item.itemName.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -68,7 +68,7 @@ export default function WishlistPage() {
       (activeTab === "trips" && item.itemType === "trip");
     
     return matchesSearch && matchesTab;
-  });
+  }) : [];
 
   // If user is not authenticated, redirect to login
   if (!isAuthLoading && !user) {

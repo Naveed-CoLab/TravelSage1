@@ -1,15 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { BubbleRating } from '@/components/ui/bubble-rating';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ReviewList } from '@/components/reviews/review-list';
 import { Heart, MapPin, CalendarDays, DollarSign, Users } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function DestinationDetailPage() {
   const { id } = useParams();
   const [isSaved, setIsSaved] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   const { data: destination, isLoading, error } = useQuery({
     queryKey: [`/api/destinations/${id}`],
@@ -21,9 +27,99 @@ export default function DestinationDetailPage() {
       return res.json();
     },
   });
+
+  // Check if destination is in wishlist
+  const { data: wishlistItems } = useQuery({
+    queryKey: ["/api/wishlist"],
+    enabled: !!user,
+  });
+
+  // Add to wishlist mutation
+  const addToWishlist = useMutation({
+    mutationFn: async () => {
+      const wishlistItem = {
+        itemType: "destination",
+        itemId: id,
+        itemName: destination.name,
+        itemImage: destination.imageUrl,
+        additionalData: {
+          description: destination.description,
+          country: destination.country
+        }
+      };
+      
+      return apiRequest("/api/wishlist", "POST", wishlistItem);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/wishlist"] });
+      toast({
+        title: "Added to wishlist",
+        description: "This destination has been added to your wishlist",
+      });
+      setIsSaved(true);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add to wishlist. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Remove from wishlist mutation
+  const removeFromWishlist = useMutation({
+    mutationFn: async (itemId: number) => {
+      return apiRequest(`/api/wishlist/${itemId}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/wishlist"] });
+      toast({
+        title: "Removed from wishlist",
+        description: "This destination has been removed from your wishlist",
+      });
+      setIsSaved(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to remove from wishlist. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Check if destination is in wishlist
+  useEffect(() => {
+    if (wishlistItems && id) {
+      const isInWishlist = wishlistItems.some(
+        (item: any) => item.itemType === "destination" && item.itemId === id
+      );
+      setIsSaved(isInWishlist);
+    }
+  }, [wishlistItems, id]);
   
   const toggleSave = () => {
-    setIsSaved(!isSaved);
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to save this destination to your wishlist",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isSaved) {
+      // Find the wishlist item ID to remove
+      const wishlistItem = wishlistItems?.find(
+        (item: any) => item.itemType === "destination" && item.itemId === id
+      );
+      if (wishlistItem) {
+        removeFromWishlist.mutate(wishlistItem.id);
+      }
+    } else {
+      addToWishlist.mutate();
+    }
   };
   
   if (isLoading) {
