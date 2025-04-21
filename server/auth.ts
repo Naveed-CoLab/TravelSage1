@@ -155,17 +155,25 @@ export function setupAuth(app: Express) {
   app.get("/api/auth/check", (req, res) => {
     const clientID = process.env.GOOGLE_CLIENT_ID ? "Set (length: " + process.env.GOOGLE_CLIENT_ID.length + ")" : "Not set";
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET ? "Set (length: " + process.env.GOOGLE_CLIENT_SECRET.length + ")" : "Not set";
-    const callbackURL = "https://" + (process.env.REPL_SLUG || "workspace") + ".id.repl.co/api/auth/google/callback";
+    
+    // Generate dynamic callback URL based on the current request
+    const host = req.headers.host || (process.env.REPL_SLUG ? process.env.REPL_SLUG + ".id.repl.co" : "workspace.id.repl.co");
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const dynamicCallbackURL = `${protocol}://${host}/api/auth/google/callback`;
     
     res.json({
       googleAuth: {
         clientID,
         clientSecret,
-        callbackURL,
+        actualCallbackURL: dynamicCallbackURL,
+        expectedCallbackURL: process.env.NODE_ENV === "production" 
+          ? "https://" + process.env.REPL_SLUG + ".replit.app/api/auth/google/callback"
+          : "https://" + (process.env.REPL_SLUG || "workspace") + ".id.repl.co/api/auth/google/callback"
       },
       environment: {
         isDev: process.env.NODE_ENV === "development",
         host: req.headers.host,
+        repl_slug: process.env.REPL_SLUG || "unknown"
       }
     });
   });
