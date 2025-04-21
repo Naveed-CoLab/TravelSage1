@@ -307,6 +307,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Save flight search to history (dedicated endpoint)
+  app.post("/api/flights/history", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to save flight search history" });
+      }
+      
+      const userId = req.user!.id;
+      const { 
+        originLocationCode,
+        destinationLocationCode,
+        departureDate,
+        returnDate,
+        adults = 1,
+        children,
+        infants,
+        travelClass,
+        tripType = "ONE_WAY",
+        maxPrice,
+        currencyCode
+      } = req.body;
+      
+      // Validate required parameters
+      if (!originLocationCode || !destinationLocationCode || !departureDate) {
+        return res.status(400).json({ 
+          message: "Missing required parameters", 
+          required: ["originLocationCode", "destinationLocationCode", "departureDate"] 
+        });
+      }
+      
+      // Create the flight search record
+      const flightSearch = await storage.createFlightSearch({
+        userId,
+        originLocationCode,
+        destinationLocationCode,
+        departureDate,
+        returnDate,
+        adults,
+        children: children || 0,
+        infants: infants || 0,
+        travelClass,
+        tripType,
+        maxPrice,
+        currencyCode
+      });
+      
+      res.status(201).json(flightSearch);
+    } catch (error) {
+      console.error("Error saving flight search:", error);
+      res.status(500).json({ 
+        message: "Failed to save flight search", 
+        error: (error as Error).message 
+      });
+    }
+  });
+  
   // Delete a flight search from history
   app.delete("/api/flights/history/:id", async (req: Request, res: Response) => {
     try {
@@ -376,23 +432,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         max
       });
       
-      // Save search to history if user is logged in
-      if (req.isAuthenticated()) {
-        const userId = req.user!.id;
-        await storage.createFlightSearch({
-          userId,
-          originLocationCode,
-          destinationLocationCode,
-          departureDate,
-          returnDate,
-          adults,
-          children: children || 0,
-          infants: infants || 0,
-          travelClass,
-          tripType,
-          maxPrice,
-          currencyCode
-        });
+      // Save search to history if user is logged in 
+      // This happens regardless of whether the flight search API call succeeds
+      try {
+        if (req.isAuthenticated()) {
+          const userId = req.user!.id;
+          await storage.createFlightSearch({
+            userId,
+            originLocationCode,
+            destinationLocationCode,
+            departureDate,
+            returnDate,
+            adults,
+            children: children || 0,
+            infants: infants || 0,
+            travelClass,
+            tripType,
+            maxPrice,
+            currencyCode
+          });
+        }
+      } catch (dbError) {
+        console.error("Error saving flight search history:", dbError);
+        // Continue to return flight results even if saving to history fails
       }
       
       res.json(flightOffers);

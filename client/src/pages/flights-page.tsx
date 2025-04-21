@@ -357,7 +357,8 @@ export default function FlightsPage() {
       // If user is logged in, save the search to history
       if (user) {
         try {
-          // Save search to history via API
+          // Make a dedicated API call to save the search history
+          // We're making a separate call here independent of the flight search API
           const searchData = {
             originLocationCode: origin,
             destinationLocationCode: destination,
@@ -368,12 +369,21 @@ export default function FlightsPage() {
             tripType: tripType === "oneway" ? "ONE_WAY" : "ROUND_TRIP"
           };
           
-          await apiRequest('POST', '/api/flights/search', searchData);
+          await apiRequest('POST', '/api/flights/history', searchData);
           
           // Refresh the search history
           refetchHistory();
+          
+          toast({
+            title: "Search saved",
+            description: "Your search has been saved to your history",
+          });
         } catch (historyError) {
           console.error("Error saving search history:", historyError);
+          toast({
+            title: "Note",
+            description: "Your search results were found but we couldn't save this search to your history",
+          });
           // Continue with flight display even if history saving fails
         }
       }
@@ -636,8 +646,8 @@ export default function FlightsPage() {
                       />
                       <datalist id="origin-options">
                         {popularAirports.map(airport => (
-                          <option key={airport.code} value={airport.city}>
-                            {airport.code} - {airport.name}
+                          <option key={airport.code} value={airport.code}>
+                            {airport.code} - {airport.city}, {airport.country}
                           </option>
                         ))}
                       </datalist>
@@ -670,8 +680,8 @@ export default function FlightsPage() {
                       />
                       <datalist id="destination-options">
                         {popularAirports.map(airport => (
-                          <option key={airport.code} value={airport.city}>
-                            {airport.code} - {airport.name}
+                          <option key={airport.code} value={airport.code}>
+                            {airport.code} - {airport.city}, {airport.country}
                           </option>
                         ))}
                       </datalist>
