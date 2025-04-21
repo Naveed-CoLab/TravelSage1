@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   username: z.string().min(3, { message: "Username must be at least 3 characters" }),
@@ -32,8 +33,10 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
+  const [location] = useLocation();
   const [, navigate] = useLocation();
   const { user, loginMutation, registerMutation, isLoading } = useAuth();
+  const [authError, setAuthError] = useState<string | null>(null);
   
   // Redirect if user is already logged in
   useEffect(() => {
@@ -41,6 +44,16 @@ export default function AuthPage() {
       navigate("/");
     }
   }, [user, navigate]);
+  
+  // Check for error in URL from Google auth
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    if (error) {
+      console.error("Authentication error:", error);
+      setAuthError(decodeURIComponent(error));
+    }
+  }, [location]);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -91,6 +104,13 @@ export default function AuthPage() {
           
           <Card>
             <CardContent className="pt-6">
+              {authError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertTitle>Authentication Error</AlertTitle>
+                  <AlertDescription>{authError}</AlertDescription>
+                </Alert>
+              )}
+              
               <Tabs defaultValue="login">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
                   <TabsTrigger value="login">Sign In</TabsTrigger>
