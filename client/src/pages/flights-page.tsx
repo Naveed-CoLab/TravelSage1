@@ -376,7 +376,10 @@ export default function FlightsPage() {
           
           toast({
             title: "Search saved",
-            description: "Your search has been saved to your history",
+            description: "Your search has been saved to history",
+            variant: "default",
+            className: "bg-green-50 border-green-100 text-green-600",
+            duration: 3000,
           });
         } catch (historyError) {
           console.error("Error saving search history:", historyError);
@@ -535,85 +538,8 @@ export default function FlightsPage() {
           </div>
         </div>
         
-        {/* Recent Searches */}
-        {user && searchHistory && searchHistory.length > 0 && (
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-20 mb-4 relative z-10">
-            <Card className="shadow-lg border-0 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center">
-                  <History className="h-5 w-5 mr-2 text-blue-600" />
-                  Recent Searches
-                </CardTitle>
-                <CardDescription>
-                  Click on a search to reload it or delete it from your history
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  {searchHistory.map((search) => (
-                    <Card key={search.id} className="min-w-[260px] max-w-[340px] flex-shrink-0 shadow bg-white">
-                      <CardHeader className="p-4 pb-2">
-                        <CardTitle className="text-base flex justify-between items-center">
-                          <span className="truncate">
-                            {search.originLocationCode} → {search.destinationLocationCode}
-                          </span>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 rounded-full text-gray-400 hover:text-red-600 -mr-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteSearchFromHistory(search.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </CardTitle>
-                        <CardDescription className="text-xs">
-                          {new Date(search.createdAt).toLocaleDateString()}
-                          {search.tripType === "ONE_WAY" ? " • One Way" : " • Round Trip"}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-2 text-sm">
-                        <div className="flex justify-between text-gray-500 text-xs">
-                          <span>
-                            <Calendar className="h-3 w-3 inline mr-1" />
-                            {new Date(search.departureDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            })}
-                            {search.returnDate && ` - ${new Date(search.returnDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            })}`}
-                          </span>
-                          <span>
-                            <User className="h-3 w-3 inline mr-1" />
-                            {search.adults} {search.adults === 1 ? 'adult' : 'adults'}
-                            {search.children ? `, ${search.children} children` : ''}
-                          </span>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
-                          onClick={() => applySearchFromHistory(search)}
-                        >
-                          Apply this search
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-        
         {/* Search Form Card */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-14 mb-6 relative z-10 search-form">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-20 mb-6 relative z-10 search-form">
           <Card className="shadow-xl border-0">
             <CardContent className="p-6">
               <Tabs defaultValue={tripType} onValueChange={setTripType} className="w-full">
