@@ -229,6 +229,36 @@ export const reviewRelations = relations(reviews, ({ one }) => ({
   }),
 }));
 
+// Flight searches table for tracking user flight search history
+export const flightSearches = pgTable("flight_searches", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  originLocationCode: text("origin_location_code").notNull(),
+  destinationLocationCode: text("destination_location_code").notNull(),
+  departureDate: text("departure_date").notNull(), // YYYY-MM-DD
+  returnDate: text("return_date"), // YYYY-MM-DD for round trips
+  adults: integer("adults").notNull().default(1),
+  children: integer("children").default(0),
+  infants: integer("infants").default(0),
+  travelClass: text("travel_class").default("ECONOMY"), // ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST
+  tripType: text("trip_type").default("ONE_WAY"), // ONE_WAY, ROUND_TRIP, MULTI_CITY
+  maxPrice: integer("max_price"),
+  currencyCode: text("currency_code").default("USD"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertFlightSearchSchema = createInsertSchema(flightSearches).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const flightSearchRelations = relations(flightSearches, ({ one }) => ({
+  user: one(users, {
+    fields: [flightSearches.userId],
+    references: [users.id],
+  }),
+}));
+
 // Export type declarations for all tables
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -250,3 +280,5 @@ export type AiPrompt = typeof aiPrompts.$inferSelect;
 export type InsertAiPrompt = z.infer<typeof insertAiPromptSchema>;
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type FlightSearch = typeof flightSearches.$inferSelect;
+export type InsertFlightSearch = z.infer<typeof insertFlightSearchSchema>;

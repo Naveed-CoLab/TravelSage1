@@ -6,6 +6,7 @@ import {
   bookings,
   destinations,
   reviews,
+  flightSearches,
   type User, 
   type InsertUser, 
   type Trip, 
@@ -19,7 +20,9 @@ import {
   type Destination,
   type InsertDestination,
   type Review,
-  type InsertReview
+  type InsertReview,
+  type FlightSearch,
+  type InsertFlightSearch
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, count } from "drizzle-orm";
@@ -85,6 +88,11 @@ export interface IStorage {
   deleteReview(id: number): Promise<void>;
   markReviewHelpful(id: number): Promise<Review>;
   reportReview(id: number): Promise<Review>;
+  
+  // Flight search methods
+  getFlightSearchesByUserId(userId: number): Promise<FlightSearch[]>;
+  createFlightSearch(flightSearch: InsertFlightSearch): Promise<FlightSearch>;
+  deleteFlightSearch(id: number): Promise<void>;
 
   // Session store
   sessionStore: any; // Using any type to bypass the SessionStore type issue
@@ -430,6 +438,26 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedReview;
+  }
+  
+  // Flight search methods
+  async getFlightSearchesByUserId(userId: number): Promise<FlightSearch[]> {
+    return db.select()
+      .from(flightSearches)
+      .where(eq(flightSearches.userId, userId))
+      .orderBy(desc(flightSearches.createdAt));
+  }
+  
+  async createFlightSearch(flightSearch: InsertFlightSearch): Promise<FlightSearch> {
+    const [newFlightSearch] = await db
+      .insert(flightSearches)
+      .values(flightSearch)
+      .returning();
+    return newFlightSearch;
+  }
+  
+  async deleteFlightSearch(id: number): Promise<void> {
+    await db.delete(flightSearches).where(eq(flightSearches.id, id));
   }
 }
 
