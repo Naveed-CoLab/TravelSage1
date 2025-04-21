@@ -10,10 +10,14 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   firstName: text("first_name"),
   lastName: text("last_name"),
+  profileImage: text("profile_image"),
+  bio: text("bio"),
+  phone: text("phone"),
   googleId: text("google_id").unique(),
   role: text("role").default("user").notNull(), // 'user', 'admin', 'moderator'
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -22,10 +26,23 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   firstName: true,
   lastName: true,
+  profileImage: true,
+  bio: true,
+  phone: true,
   googleId: true,
   role: true,
   isActive: true,
 });
+
+export const userRelations = relations(users, ({ one, many }) => ({
+  settings: one(userSettings, {
+    fields: [users.id],
+    references: [userSettings.userId],
+  }),
+  trips: many(trips),
+  reviews: many(reviews),
+  flightSearches: many(flightSearches),
+}));
 
 export const trips = pgTable("trips", {
   id: serial("id").primaryKey(),
@@ -259,6 +276,32 @@ export const flightSearchRelations = relations(flightSearches, ({ one }) => ({
   }),
 }));
 
+// User settings table for storing user preferences
+export const userSettings = pgTable("user_settings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id).unique(),
+  theme: text("theme").default("light"),
+  language: text("language").default("en"),
+  emailNotifications: boolean("email_notifications").default(true),
+  pushNotifications: boolean("push_notifications").default(true),
+  currency: text("currency").default("USD"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const userSettingsRelations = relations(userSettings, ({ one }) => ({
+  user: one(users, {
+    fields: [userSettings.userId],
+    references: [users.id],
+  }),
+}));
+
 // Export type declarations for all tables
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -282,3 +325,5 @@ export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type FlightSearch = typeof flightSearches.$inferSelect;
 export type InsertFlightSearch = z.infer<typeof insertFlightSearchSchema>;
+export type UserSettings = typeof userSettings.$inferSelect;
+export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;

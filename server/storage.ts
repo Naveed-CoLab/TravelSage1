@@ -7,6 +7,7 @@ import {
   destinations,
   reviews,
   flightSearches,
+  userSettings,
   type User, 
   type InsertUser, 
   type Trip, 
@@ -22,7 +23,9 @@ import {
   type Review,
   type InsertReview,
   type FlightSearch,
-  type InsertFlightSearch
+  type InsertFlightSearch,
+  type UserSettings,
+  type InsertUserSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, count } from "drizzle-orm";
@@ -40,8 +43,16 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User>;
+  updateUserPassword(id: number, newPassword: string): Promise<User>;
+  updateUserEmail(id: number, newEmail: string): Promise<User>;
+  updateUserProfileImage(id: number, imageUrl: string): Promise<User>;
   getUserCount(): Promise<number>;
   getNewUserCountToday(): Promise<number>;
+  
+  // User settings methods
+  getUserSettings(userId: number): Promise<UserSettings | undefined>;
+  createUserSettings(settings: InsertUserSettings): Promise<UserSettings>;
+  updateUserSettings(userId: number, settings: Partial<UserSettings>): Promise<UserSettings>;
   
   // Admin methods
   getTripCount(): Promise<number>;
@@ -82,6 +93,7 @@ export interface IStorage {
 
   // Review methods
   getReviewsByTargetTypeAndId(targetType: string, targetId: string): Promise<Review[]>;
+  getReviewsByUserId(userId: number): Promise<Review[]>;
   getReviewById(id: number): Promise<Review | undefined>;
   createReview(review: InsertReview): Promise<Review>;
   updateReview(id: number, reviewData: Partial<Review>): Promise<Review>;
@@ -137,10 +149,65 @@ export class DatabaseStorage implements IStorage {
   async updateUser(id: number, userData: Partial<User>): Promise<User> {
     const [updatedUser] = await db
       .update(users)
-      .set(userData)
+      .set({ ...userData, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return updatedUser;
+  }
+
+  async updateUserPassword(id: number, newPassword: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ password: newPassword, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserEmail(id: number, newEmail: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ email: newEmail, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserProfileImage(id: number, imageUrl: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ profileImage: imageUrl, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+  
+  // User settings methods
+  async getUserSettings(userId: number): Promise<UserSettings | undefined> {
+    const [settings] = await db.select().from(userSettings).where(eq(userSettings.userId, userId));
+    return settings;
+  }
+
+  async createUserSettings(settings: InsertUserSettings): Promise<UserSettings> {
+    const [newSettings] = await db.insert(userSettings).values(settings).returning();
+    return newSettings;
+  }
+
+  async updateUserSettings(userId: number, settingsData: Partial<UserSettings>): Promise<UserSettings> {
+    const existingSettings = await this.getUserSettings(userId);
+    
+    if (!existingSettings) {
+      // If settings don't exist yet, create them
+      return this.createUserSettings({ userId, ...settingsData } as InsertUserSettings);
+    }
+    
+    // Otherwise update existing settings
+    const [updatedSettings] = await db
+      .update(userSettings)
+      .set({ ...settingsData, updatedAt: new Date() })
+      .where(eq(userSettings.userId, userId))
+      .returning();
+    return updatedSettings;
   }
   
   async getUserCount(): Promise<number> {
