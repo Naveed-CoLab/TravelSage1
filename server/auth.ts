@@ -63,70 +63,12 @@ export function setupAuth(app: Express) {
   
   // Google OAuth Strategy
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-    // Get the base URL from the request for the callback URL
-    const callbackURL = process.env.NODE_ENV === "production" 
-      ? "https://" + process.env.REPL_SLUG + ".replit.app/api/auth/google/callback"
-      : "https://" + (process.env.REPL_SLUG || "trip-planner") + ".id.repl.co/api/auth/google/callback";
-
-    console.log("Google OAuth callback URL:", callbackURL);
+    // We'll create the strategy dynamically on each request 
+    // So we always have the correct callback URL
     
-    passport.use(
-      new GoogleStrategy(
-        {
-          clientID: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          callbackURL: callbackURL,
-          scope: ["profile", "email"],
-        },
-        async (accessToken, refreshToken, profile, done) => {
-          try {
-            // Check if user already exists by email
-            const email = profile.emails?.[0]?.value;
-            if (!email) {
-              return done(new Error("No email provided by Google"));
-            }
-
-            // Use email as username to find user, since for Google auth we don't have a username
-            let user = await storage.getUserByEmail(email);
-            
-            if (!user) {
-              // Create a new user if not exists
-              const username = profile.displayName?.replace(/\s+/g, "") || 
-                `user_${Math.random().toString(36).substring(2, 8)}`;
-              
-              // Check if the username is already taken
-              let usernameExists = await storage.getUserByUsername(username);
-              let uniqueUsername = username;
-              
-              // If username exists, add a random string to make it unique
-              if (usernameExists) {
-                uniqueUsername = `${username}_${Math.random().toString(36).substring(2, 8)}`;
-              }
-              
-              user = await storage.createUser({
-                username: uniqueUsername,
-                email,
-                // Generate a random secure password that won't be used (user will login via Google)
-                password: await hashPassword(randomBytes(16).toString('hex')),
-                firstName: profile.name?.givenName || '',
-                lastName: profile.name?.familyName || '',
-                googleId: profile.id
-              });
-            } else if (!user.googleId) {
-              // If user exists but doesn't have a Google ID, update it
-              user = await storage.updateUser(user.id, {
-                ...user,
-                googleId: profile.id
-              });
-            }
-            
-            return done(null, user);
-          } catch (error) {
-            return done(error);
-          }
-        }
-      )
-    );
+    // Just log the configuration status
+    console.log("Google OAuth is configured with CLIENT_ID and CLIENT_SECRET");
+    console.log("Callback URL will be determined from each request");
   } else {
     console.warn("Google authentication is not configured. GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set.");
   }
@@ -322,6 +264,69 @@ export function setupAuth(app: Express) {
     console.log("Auth headers:", req.headers.host, req.headers.referer);
     console.log("Auth user-agent:", req.headers["user-agent"]);
     
+    // Update the callback URL based on the current host
+    if (req.headers.host) {
+      const protocol = req.headers.host.includes('localhost') ? 'http' : 'https';
+      const dynamicCallbackURL = `${protocol}://${req.headers.host}/api/auth/google/callback`;
+      console.log("Updating Google strategy with callback URL:", dynamicCallbackURL);
+      
+      // Re-register the strategy with the new callback URL
+      passport.use('google', new GoogleStrategy(
+        {
+          clientID: process.env.GOOGLE_CLIENT_ID || '',
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+          callbackURL: dynamicCallbackURL,
+        },
+        async (accessToken: any, refreshToken: any, profile: any, done: any) => {
+          try {
+            // Check if user already exists by email
+            const email = profile.emails?.[0]?.value;
+            if (!email) {
+              return done(new Error("No email provided by Google"));
+            }
+
+            // Use email as username to find user, since for Google auth we don't have a username
+            let user = await storage.getUserByEmail(email);
+            
+            if (!user) {
+              // Create a new user if not exists
+              const username = profile.displayName?.replace(/\s+/g, "") || 
+                `user_${Math.random().toString(36).substring(2, 8)}`;
+              
+              // Check if the username is already taken
+              let usernameExists = await storage.getUserByUsername(username);
+              let uniqueUsername = username;
+              
+              // If username exists, add a random string to make it unique
+              if (usernameExists) {
+                uniqueUsername = `${username}_${Math.random().toString(36).substring(2, 8)}`;
+              }
+              
+              user = await storage.createUser({
+                username: uniqueUsername,
+                email,
+                // Generate a random secure password that won't be used (user will login via Google)
+                password: await hashPassword(randomBytes(16).toString('hex')),
+                firstName: profile.name?.givenName || '',
+                lastName: profile.name?.familyName || '',
+                googleId: profile.id
+              });
+            } else if (!user.googleId) {
+              // If user exists but doesn't have a Google ID, update it
+              user = await storage.updateUser(user.id, {
+                ...user,
+                googleId: profile.id
+              });
+            }
+            
+            return done(null, user);
+          } catch (error) {
+            return done(error);
+          }
+        }
+      ));
+    }
+    
     // Override the default passport behavior to log the redirect URL
     const originalRedirect = res.redirect;
     res.redirect = function(url) {
@@ -343,6 +348,70 @@ export function setupAuth(app: Express) {
       console.log("Callback URL:", req.url);
       console.log("Callback query:", JSON.stringify(req.query));
       console.log("Callback headers:", req.headers.host, req.headers.referer);
+      
+      // Update the callback URL again based on the current host
+      if (req.headers.host) {
+        const protocol = req.headers.host.includes('localhost') ? 'http' : 'https';
+        const dynamicCallbackURL = `${protocol}://${req.headers.host}/api/auth/google/callback`;
+        console.log("Updating Google strategy for callback with URL:", dynamicCallbackURL);
+        
+        // Re-register the strategy with the new callback URL
+        // This ensures the strategy is updated even in the callback phase
+        passport.use('google', new GoogleStrategy(
+          {
+            clientID: process.env.GOOGLE_CLIENT_ID || '',
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+            callbackURL: dynamicCallbackURL,
+          },
+          async (accessToken: any, refreshToken: any, profile: any, done: any) => {
+            try {
+              // Check if user already exists by email
+              const email = profile.emails?.[0]?.value;
+              if (!email) {
+                return done(new Error("No email provided by Google"));
+              }
+
+              // Use email as username to find user
+              let user = await storage.getUserByEmail(email);
+              
+              if (!user) {
+                // Create a new user if not exists
+                const username = profile.displayName?.replace(/\s+/g, "") || 
+                  `user_${Math.random().toString(36).substring(2, 8)}`;
+                
+                // Check if the username is already taken
+                let usernameExists = await storage.getUserByUsername(username);
+                let uniqueUsername = username;
+                
+                // If username exists, add a random string to make it unique
+                if (usernameExists) {
+                  uniqueUsername = `${username}_${Math.random().toString(36).substring(2, 8)}`;
+                }
+                
+                user = await storage.createUser({
+                  username: uniqueUsername,
+                  email,
+                  // Generate a random secure password
+                  password: await hashPassword(randomBytes(16).toString('hex')),
+                  firstName: profile.name?.givenName || '',
+                  lastName: profile.name?.familyName || '',
+                  googleId: profile.id
+                });
+              } else if (!user.googleId) {
+                // If user exists but doesn't have a Google ID, update it
+                user = await storage.updateUser(user.id, {
+                  ...user,
+                  googleId: profile.id
+                });
+              }
+              
+              return done(null, user);
+            } catch (error) {
+              return done(error);
+            }
+          }
+        ));
+      }
       
       if (req.query.error) {
         console.error("Google auth error:", req.query.error);
