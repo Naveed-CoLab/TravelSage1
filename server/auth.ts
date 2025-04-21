@@ -63,12 +63,19 @@ export function setupAuth(app: Express) {
   
   // Google OAuth Strategy
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    // Get the base URL from the request for the callback URL
+    const callbackURL = process.env.NODE_ENV === "production" 
+      ? "https://" + process.env.REPL_SLUG + ".replit.app/api/auth/google/callback"
+      : "https://" + (process.env.REPL_SLUG || "trip-planner") + ".id.repl.co/api/auth/google/callback";
+
+    console.log("Google OAuth callback URL:", callbackURL);
+    
     passport.use(
       new GoogleStrategy(
         {
           clientID: process.env.GOOGLE_CLIENT_ID,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          callbackURL: "/api/auth/google/callback",
+          callbackURL: callbackURL,
           scope: ["profile", "email"],
         },
         async (accessToken, refreshToken, profile, done) => {
@@ -169,7 +176,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: any, user: Express.User | false, info: any) => {
       if (err) return next(err);
       if (!user) {
         return res.status(401).json({ message: "Invalid username or password" });
@@ -204,7 +211,7 @@ export function setupAuth(app: Express) {
   
   // Admin login endpoint
   app.post("/api/admin/login", (req, res, next) => {
-    passport.authenticate("local", async (err, user, info) => {
+    passport.authenticate("local", async (err: any, user: Express.User | false, info: any) => {
       if (err) return next(err);
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
@@ -290,14 +297,33 @@ export function setupAuth(app: Express) {
   });
 
   // Google authentication routes
-  app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+  app.get("/api/auth/google", (req, res, next) => {
+    console.log("Google auth route accessed");
+    passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+  });
 
   app.get(
     "/api/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/auth" }),
+    (req, res, next) => {
+      console.log("Google auth callback received", req.query);
+      if (req.query.error) {
+        console.error("Google auth error:", req.query.error);
+        return res.redirect("/auth?error=" + encodeURIComponent(req.query.error as string));
+      }
+      next();
+    },
+    passport.authenticate("google", { 
+      failureRedirect: "/auth?error=google_auth_failed",
+      failWithError: true 
+    }),
     (req, res) => {
+      console.log("Google authentication successful");
       // Successful authentication, redirect to home page
       res.redirect("/");
+    },
+    (err: any, req: any, res: any, next: any) => {
+      console.error("Google auth error:", err);
+      res.redirect("/auth?error=" + encodeURIComponent(err.message || "Unknown error"));
     }
   );
 }
