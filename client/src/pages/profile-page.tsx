@@ -8,14 +8,131 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Mail, Key, Plane, History, ChevronRight } from "lucide-react";
+import { User, Mail, Key, Plane, History, ChevronRight, Save, X, AlertCircle, Check } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+// Define our profile update schema
+const profileUpdateSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email("Invalid email address").optional(),
+});
+
+type ProfileUpdateFormValues = z.infer<typeof profileUpdateSchema>;
+
+// Define our password update schema
+const passwordUpdateSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+type PasswordUpdateFormValues = z.infer<typeof passwordUpdateSchema>;
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   
   if (!user) return null;
+  
+  // Initialize our form with the current user data
+  const profileForm = useForm<ProfileUpdateFormValues>({
+    resolver: zodResolver(profileUpdateSchema),
+    defaultValues: {
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email,
+    },
+  });
+  
+  // Initialize password form
+  const passwordForm = useForm<PasswordUpdateFormValues>({
+    resolver: zodResolver(passwordUpdateSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+  
+  // Define our profile update mutation
+  const profileUpdateMutation = useMutation({
+    mutationFn: async (data: ProfileUpdateFormValues) => {
+      const res = await apiRequest("PUT", "/api/user/profile", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/user"], data);
+      setIsEditing(false);
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Define our password update mutation
+  const passwordUpdateMutation = useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const res = await apiRequest("PUT", "/api/user/password", data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      setIsChangingPassword(false);
+      passwordForm.reset();
+      toast({
+        title: "Password updated",
+        description: "Your password has been updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Password update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle profile form submission
+  const onProfileSubmit = (values: ProfileUpdateFormValues) => {
+    profileUpdateMutation.mutate(values);
+  };
+  
+  // Handle password form submission
+  const onPasswordSubmit = (values: PasswordUpdateFormValues) => {
+    passwordUpdateMutation.mutate({
+      currentPassword: values.currentPassword,
+      newPassword: values.newPassword,
+    });
+  };
 
   return (
     <MainLayout>

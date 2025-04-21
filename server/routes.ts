@@ -37,6 +37,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
 
+  // User profile routes
+  app.put("/api/user/profile", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    try {
+      const { firstName, lastName, email } = req.body;
+      
+      // Create an update object with only the provided fields
+      const updateData: Record<string, any> = {};
+      if (firstName !== undefined) updateData.firstName = firstName;
+      if (lastName !== undefined) updateData.lastName = lastName;
+      
+      // If email is being changed, check if it's already in use
+      if (email !== undefined && email !== req.user.email) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser) {
+          return res.status(400).json({ message: "Email already in use" });
+        }
+        updateData.email = email;
+      }
+      
+      const updatedUser = await storage.updateUser(req.user.id, updateData);
+      
+      // Remove password from the response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+  
+  // Password change endpoint
+  app.put("/api/user/password", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
+    
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+      
+      // Verify current password
+      const isPasswordValid = await comparePasswords(currentPassword, req.user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+      
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update the password
+      const updatedUser = await storage.updateUserPassword(req.user.id, hashedPassword);
+      
+      // Remove password from the response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.json({ message: "Password updated successfully", user: userWithoutPassword });
+    } catch (error) {
+      console.error("Password update error:", error);
+      res.status(500).json({ message: "Failed to update password" });
+    }
+  });
+
   // Trip routes
   app.get("/api/trips", async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) return res.status(401).send("Unauthorized");
