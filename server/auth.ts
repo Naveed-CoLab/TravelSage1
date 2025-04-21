@@ -209,6 +209,25 @@ export function setupAuth(app: Express) {
     res.json(userWithoutPassword);
   });
   
+  // Route to check OAuth configuration
+  app.get("/api/auth/check", (req, res) => {
+    const clientID = process.env.GOOGLE_CLIENT_ID ? "Set (length: " + process.env.GOOGLE_CLIENT_ID.length + ")" : "Not set";
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET ? "Set (length: " + process.env.GOOGLE_CLIENT_SECRET.length + ")" : "Not set";
+    const callbackURL = "https://" + (process.env.REPL_SLUG || "workspace") + ".id.repl.co/api/auth/google/callback";
+    
+    res.json({
+      googleAuth: {
+        clientID,
+        clientSecret,
+        callbackURL,
+      },
+      environment: {
+        isDev: process.env.NODE_ENV === "development",
+        host: req.headers.host,
+      }
+    });
+  });
+  
   // Admin login endpoint
   app.post("/api/admin/login", (req, res, next) => {
     passport.authenticate("local", async (err: any, user: Express.User | false, info: any) => {
@@ -299,13 +318,32 @@ export function setupAuth(app: Express) {
   // Google authentication routes
   app.get("/api/auth/google", (req, res, next) => {
     console.log("Google auth route accessed");
-    passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+    console.log("Auth URL:", req.url);
+    console.log("Auth headers:", req.headers.host, req.headers.referer);
+    console.log("Auth user-agent:", req.headers["user-agent"]);
+    
+    // Override the default passport behavior to log the redirect URL
+    const originalRedirect = res.redirect;
+    res.redirect = function(url) {
+      console.log('DEBUG: Redirecting to Google URL:', url);
+      return originalRedirect.call(this, url);
+    };
+    
+    passport.authenticate("google", { 
+      scope: ["profile", "email"],
+      session: true,
+      prompt: 'consent' 
+    })(req, res, next);
   });
 
   app.get(
     "/api/auth/google/callback",
     (req, res, next) => {
-      console.log("Google auth callback received", req.query);
+      console.log("Google auth callback received");
+      console.log("Callback URL:", req.url);
+      console.log("Callback query:", JSON.stringify(req.query));
+      console.log("Callback headers:", req.headers.host, req.headers.referer);
+      
       if (req.query.error) {
         console.error("Google auth error:", req.query.error);
         return res.redirect("/auth?error=" + encodeURIComponent(req.query.error as string));
