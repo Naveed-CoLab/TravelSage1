@@ -38,9 +38,7 @@ export default function WishlistPage() {
   // Delete wishlist item mutation
   const deleteWishlistItem = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/wishlist/${id}`, {
-        method: "DELETE",
-      });
+      return apiRequest(`/api/wishlist/${id}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/wishlist"] });

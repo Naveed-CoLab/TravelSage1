@@ -15,6 +15,7 @@ import ProfilePage from "@/pages/profile-page";
 import FlightsPage from "@/pages/flights-page";
 import FlightSearchPage from "@/pages/flight-search-page";
 import ProfileFlightsPage from "@/pages/profile-flights-page";
+import WishlistPage from "@/pages/wishlist-page";
 import AdminLoginPage from "@/pages/admin/login-page";
 import DashboardPage from "@/pages/admin/dashboard-page";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -31,6 +32,7 @@ function Router() {
       <ProtectedRoute path="/trips/:id" component={TripDetailPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/profile/flights" component={ProfileFlightsPage} />
+      <ProtectedRoute path="/wishlist" component={WishlistPage} />
       <Route path="/explore" component={ExplorePage} />
       <Route path="/destinations/:id" component={DestinationDetailPage} />
       <ProtectedRoute path="/flights" component={FlightsPage} />
